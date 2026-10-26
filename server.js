@@ -413,14 +413,31 @@ const server = http.createServer((request, response) => {
     'meadow-mole.svg': 'image/svg+xml'
   };
   if (Object.prototype.hasOwnProperty.call(contentTypes, webFile)) {
+    let content;
     try {
-      response.writeHead(200, { 'content-type': contentTypes[webFile], 'cache-control': 'no-store' });
-      response.end(fs.readFileSync(path.join(WEB_DIR, webFile)));
+      content = fs.readFileSync(path.join(WEB_DIR, webFile));
     } catch (error) {
+      if (error.code === 'ENOENT' || error.code === 'ENOTDIR') {
+        if (webFile === 'index.html') {
+          response.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+          response.end(JSON.stringify({
+            service: 'Mole Mash online server',
+            endpoints: { health: '/health', leaderboard: '/leaderboard', websocket: '/ws' }
+          }));
+        } else {
+          response.writeHead(404, { 'content-type': 'application/json; charset=utf-8' });
+          response.end(JSON.stringify({ error: 'Not found' }));
+        }
+        return;
+      }
       console.error(`Could not serve ${webFile}:`, error.message);
       response.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
       response.end('Game page or asset could not be loaded.');
+      return;
     }
+
+    response.writeHead(200, { 'content-type': contentTypes[webFile], 'cache-control': 'no-store' });
+    response.end(content);
     return;
   }
 
