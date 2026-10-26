@@ -30,8 +30,10 @@ const DEFAULT_EMOJI = '🐹';
 
 const clients = new Set();
 const queue = [];
+let needsLeaderboardCleanup = false;
 const leaderboard = loadLeaderboard();
 let saveTimer = null;
+if (needsLeaderboardCleanup) saveLeaderboardNow();
 
 function normalizeName(value) {
   if (typeof value !== 'string') return '';
@@ -50,9 +52,15 @@ function loadLeaderboard() {
 
     for (const row of rows) {
       const score = row && (Number.isSafeInteger(row.bestScore) ? row.bestScore : row.score);
-      if (!row || typeof row.name !== 'string' || !Number.isSafeInteger(score)) continue;
+      if (!row || typeof row.name !== 'string' || !Number.isSafeInteger(score)) {
+        needsLeaderboardCleanup = true;
+        continue;
+      }
       const name = normalizeName(row.name);
-      if (!name || score < 0 || score > MAX_SCORE) continue;
+      if (!name || score <= 0 || score > MAX_SCORE) {
+        needsLeaderboardCleanup = true;
+        continue;
+      }
       const key = name.toLocaleLowerCase('en-US');
       const emoji = normalizeEmoji(row.emoji) || DEFAULT_EMOJI;
       const old = map.get(key);
@@ -61,6 +69,7 @@ function loadLeaderboard() {
       } else if (!normalizeEmoji(old.emoji) && normalizeEmoji(row.emoji)) {
         old.emoji = emoji;
       }
+      if (old) needsLeaderboardCleanup = true;
     }
     return map;
   } catch (error) {
@@ -124,12 +133,10 @@ function persistProfile(client) {
   if (!client.name) return;
   const key = client.name.toLocaleLowerCase('en-US');
   const old = leaderboard.get(key);
-  leaderboard.set(key, {
-    key,
-    name: old ? old.name : client.name,
-    bestScore: old ? old.bestScore : 0,
-    emoji: normalizeEmoji(client.emoji) || (old && normalizeEmoji(old.emoji)) || DEFAULT_EMOJI
-  });
+  if (!old) return;
+  const emoji = normalizeEmoji(client.emoji) || normalizeEmoji(old.emoji) || DEFAULT_EMOJI;
+  if (old.emoji === emoji) return;
+  old.emoji = emoji;
   scheduleSave();
   broadcastLeaderboard();
 }
@@ -139,6 +146,7 @@ function updateLeaderboard(client, score) {
 
   const key = client.name.toLocaleLowerCase('en-US');
   const existing = leaderboard.get(key);
+  if (!existing && score === 0) return false;
   const emoji = normalizeEmoji(client.emoji) || (existing && normalizeEmoji(existing.emoji)) || DEFAULT_EMOJI;
 
   if (existing && score <= existing.bestScore) {
@@ -325,17 +333,19 @@ function handleMessage(client, raw) {
     const existingRecord = leaderboard.get(newKey);
     if (oldKey !== newKey) leaderboard.delete(oldKey);
 
-    const bestScore = Math.max(oldRecord ? oldRecord.bestScore : 0, existingRecord ? existingRecord.bestScore : 0);
-    leaderboard.set(newKey, {
-      key: newKey,
-      name,
-      bestScore,
-      emoji
-    });
+    if (oldRecord || existingRecord) {
+      const bestScore = Math.max(oldRecord ? oldRecord.bestScore : 0, existingRecord ? existingRecord.bestScore : 0);
+      leaderboard.set(newKey, {
+        key: newKey,
+        name,
+        bestScore,
+        emoji
+      });
+      scheduleSave();
+      broadcastLeaderboard();
+    }
     client.name = name;
     client.emoji = emoji;
-    scheduleSave();
-    broadcastLeaderboard();
     send(client, { type: 'profile-updated', name: client.name, emoji: client.emoji });
     return;
   }
