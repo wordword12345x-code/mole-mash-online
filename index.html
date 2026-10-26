@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>Mole Mash Online</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#192438;--panel2:#22314a;--text:#f5f7ff;--muted:#aab7ce;--lime:#b8f34a;--pink:#ff6b9a;--blue:#6edcff}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(ellipse at top,#243b59 0,#101827 55%);color:var(--text);min-height:100vh;padding:18px 12px 30px}
+main{max-width:980px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}.brand{font-weight:1000;font-size:clamp(25px,5vw,42px);letter-spacing:-1.5px}.brand span{color:var(--lime)}.status{font-size:12px;color:var(--muted);padding:8px 11px;border:1px solid #40516b;border-radius:999px;background:#101827aa}.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(245px,.8fr);gap:16px}.panel{background:#192438eF;border:1px solid #33445e;border-radius:22px;padding:16px;box-shadow:0 18px 45px #0003}.profile{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.field input,.field select{width:100%;border:1px solid #40516b;border-radius:12px;background:#101827;color:var(--text);padding:12px;font:inherit;min-width:0}.emojis{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.emoji{font-size:22px;background:#101827;border:1px solid #40516b;border-radius:11px;width:42px;height:42px;cursor:pointer}.emoji.selected{border:2px solid var(--lime);background:#334521}.stats{display:flex;gap:10px;margin:15px 0}.stat{flex:1;background:#101827;border-radius:14px;padding:10px;text-align:center}.stat small{display:block;color:var(--muted);font-size:11px}.stat strong{font-size:25px}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:12px 16px;font:inherit;font-weight:850;cursor:pointer;background:var(--lime);color:#17200c}.btn.secondary{background:#30415c;color:var(--text)}.btn:disabled{opacity:.45;cursor:not-allowed}.game-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0}.game-head h2{margin:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.hole{aspect-ratio:1/0.83;border:0;border-radius:18px;background:linear-gradient(#314765,#1b2a40);box-shadow:inset 0 -7px #101827;position:relative;overflow:hidden;cursor:pointer;touch-action:manipulation}.hole:after{content:"";position:absolute;width:78%;height:30%;left:11%;bottom:9%;background:#0c1320;border-radius:50%;box-shadow:inset 0 5px 7px #0008}.mole{position:absolute;z-index:1;bottom:12%;left:50%;transform:translateX(-50%) translateY(100%);font-size:clamp(34px,8vw,64px);transition:transform .12s ease;filter:drop-shadow(0 4px 2px #0006)}.hole.up .mole{transform:translateX(-50%) translateY(0)}.hole.bonk{background:linear-gradient(#4d6943,#263e32)}.side-title{margin:0 0 10px;font-size:20px}.leaderboard{list-style:none;padding:0;margin:0;display:grid;gap:8px}.leaderboard li{display:flex;align-items:center;gap:9px;background:#101827;padding:10px;border-radius:12px}.rank{color:var(--lime);font-weight:900;width:22px}.player{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.score{font-weight:900}.note{color:var(--muted);font-size:12px;line-height:1.45}.message{min-height:20px;color:var(--blue);font-size:13px;margin-top:10px}.footer{margin-top:14px;text-align:center;color:var(--muted);font-size:12px}.hide{display:none!important}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.panel{padding:13px}.top{align-items:flex-start}.profile{grid-template-columns:1fr 1fr}.sidepanel{order:2}}@media(max-width:380px){body{padding:10px 8px}.profile{grid-template-columns:1fr}.stats strong{font-size:21px}.btn{padding:11px 12px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top"><div class="brand">MOLE <span>MASH</span> 🐹</div><div class="status" id="connection">● Connecting to server…</div></header>
+  <div class="layout">
+    <section class="panel">
+      <div class="profile">
+        <div class="field"><label for="playerName">PLAYER NAME</label><input id="playerName" maxlength="20" value="ok" autocomplete="nickname" placeholder="Your name"></div>
+        <div class="field"><label for="emojiChoice">PROFILE EMOJI</label><select id="emojiChoice"><option>😎</option><option>😀</option><option>🥳</option><option>🤩</option><option>😺</option><option>🐸</option><option>🦊</option><option>🐼</option><option>🐵</option><option>🐻</option><option>🐰</option><option>👾</option><option>🤖</option><option>👻</option><option>⭐</option><option>🔥</option><option>🍀</option><option>💎</option></select></div>
+      </div>
+      <div class="emojis" id="emojiButtons" aria-label="Choose profile emoji"></div>
+      <div class="actions" style="margin-top:12px"><button class="btn" id="saveProfile">Save profile</button><button class="btn secondary" id="startBtn">Start game</button></div>
+      <div class="stats"><div class="stat"><small>TIME LEFT</small><strong id="time">30</strong></div><div class="stat"><small>THIS ROUND</small><strong id="score">0</strong></div><div class="stat"><small>PERSONAL BEST</small><strong id="best">275</strong></div></div>
+      <div class="game-head"><h2>Whack a mole!</h2><span class="note">Tap the mole fast</span></div>
+      <div class="grid" id="gameGrid" aria-label="Mole Mash game board"></div>
+      <div class="message" id="message" role="status">Save your profile, then start playing!</div>
+    </section>
+    <aside class="panel sidepanel">
+      <h2 class="side-title">🏆 Online leaderboard</h2>
+      <p class="note">Best scores from players connected to this server.</p>
+      <ol class="leaderboard" id="leaderboard"><li>Waiting for leaderboard…</li></ol>
+      <p class="note" style="margin-top:14px">Your best score is sent to the server when the round ends. Use the same player name to keep the same profile.</p>
+      <div class="footer">Mole Mash Online • Have fun!</div>
+    </aside>
+  </div>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const emojiList = ["😎","😀","🥳","🤩","😺","🐸","🦊","🐼","🐵","🐻","🐰","👾","🤖","👻","⭐","🔥","🍀","💎"];
+  let ws, connected = false, profileSaved = false, running = false, score = 0, timeLeft = 30, activeHole = -1, timer = null, moleTimer = null;
+  let bestScore = 275;
+  const holes = [];
+  const grid = $("gameGrid");
+  for (let i=0;i<9;i++) {
+    const b = document.createElement("button");
+    b.className = "hole"; b.type = "button"; b.setAttribute("aria-label", "Mole hole " + (i+1));
+    const m = document.createElement("span"); m.className = "mole"; m.textContent = "🐹"; b.appendChild(m);
+    b.addEventListener("click", () => {
+      if (!running || i !== activeHole) return;
+      score += 10; $("score").textContent = score; b.classList.add("bonk"); hideMole();
+      setTimeout(() => b.classList.remove("bonk"), 150);
+      $("message").textContent = "Nice hit! +10";
+    });
+    grid.appendChild(b); holes.push(b);
+  }
+  function drawEmojis() {
+    const wrap = $("emojiButtons"); wrap.innerHTML = "";
+    emojiList.forEach(e => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "emoji" + (e === $("emojiChoice").value ? " selected" : "");
+      b.textContent = e; b.setAttribute("aria-label", "Choose " + e);
+      b.onclick = () => { $("emojiChoice").value = e; drawEmojis(); };
+      wrap.appendChild(b);
+    });
+  }
+  function renderLeaderboard(list) {
+    const ol = $("leaderboard"); ol.innerHTML = "";
+    if (!Array.isArray(list) || !list.length) { ol.innerHTML = "<li>No scores yet — be the first!</li>"; return; }
+    list.slice(0,100).forEach((p,i) => {
+      const li = document.createElement("li");
+      const rank = document.createElement("span"); rank.className="rank"; rank.textContent = (i+1)+".";
+      const emoji = document.createElement("span"); emoji.textContent = emojiList.includes(p.emoji) ? p.emoji : "😀";
+      const name = document.createElement("span"); name.className="player"; name.textContent = p.name || "Player";
+      const pts = document.createElement("span"); pts.className="score"; pts.textContent = Number(p.bestScore)||0;
+      li.append(rank,emoji,name,pts); ol.appendChild(li);
+    });
+  }
+  function setStatus(text, good=false) { $("connection").textContent = (good ? "● " : "● ") + text; $("connection").style.color = good ? "#b8f34a" : "#ffb4c7"; }
+  function connect() {
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    try { ws = new WebSocket(protocol + "//" + location.host); } catch { setStatus("Connection unavailable"); return; }
+    ws.addEventListener("open", () => { connected=true; setStatus("Online",true); });
+    ws.addEventListener("message", ev => {
+      let msg; try { msg=JSON.parse(ev.data); } catch { return; }
+      if (msg.leaderboard) renderLeaderboard(msg.leaderboard);
+      if (msg.type === "welcome") { renderLeaderboard(msg.leaderboard); }
+      if (msg.type === "profile") {
+        profileSaved = true; bestScore = Number(msg.player.bestScore)||0; $("best").textContent=bestScore;
+        $("message").textContent = "Profile saved! Ready to play.";
+      }
+      if (msg.type === "score") { bestScore = Number(msg.bestScore)||bestScore; $("best").textContent=bestScore; }
+      if (msg.type === "error") $("message").textContent = msg.message || "Server error.";
+    });
+    ws.addEventListener("close", () => { connected=false; profileSaved=false; setStatus("Offline — reconnecting"); setTimeout(connect,2500); });
+    ws.addEventListener("error", () => { connected=false; setStatus("Connection error"); });
+  }
+  function send(data) { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data)); else $("message").textContent="Server not connected yet. Please wait."; }
+  function saveProfile() {
+    const name = $("playerName").value.trim();
+    if (!name) { $("message").textContent="Please enter a player name."; return; }
+    if (!connected) { $("message").textContent="Wait for the server connection first."; return; }
+    send({type:"profile",name,emoji:$("emojiChoice").value});
+  }
+  function hideMole() { holes.forEach(h=>h.classList.remove("up")); activeHole=-1; }
+  function showMole() {
+    hideMole();
+    if (!running) return;
+    activeHole = Math.floor(Math.random()*holes.length);
+    holes[activeHole].classList.add("up");
+    moleTimer = setTimeout(showMole, Math.max(380, 850 - Math.floor(score/40)*35));
+  }
+  function endGame() {
+    running=false; clearInterval(timer); clearTimeout(moleTimer); hideMole();
+    $("startBtn").disabled=false; $("startBtn").textContent="Play again";
+    $("message").textContent="Round over! Score: "+score+". Sending your best score…";
+    if (profileSaved) send({type:"score",score});
+    else $("message").textContent="Round over! Save your online profile to submit your score.";
+  }
+  function startGame() {
+    if (!connected) { $("message").textContent="Server is still connecting. Try again in a moment."; return; }
+    if (!profileSaved) { saveProfile(); setTimeout(() => { if(profileSaved) startGame(); }, 350); $("message").textContent="Saving profile… tap Start game again if needed."; return; }
+    clearInterval(timer); clearTimeout(moleTimer); score=0; timeLeft=30; running=true; activeHole=-1;
+    $("score").textContent="0"; $("time").textContent="30"; $("startBtn").disabled=true; $("message").textContent="Go go go!";
+    showMole();
+    timer=setInterval(()=>{timeLeft--; $("time").textContent=timeLeft; if(timeLeft<=0) endGame();},1000);
+  }
+  $("saveProfile").addEventListener("click", saveProfile);
+  $("startBtn").addEventListener("click", startGame);
+  $("emojiChoice").addEventListener("change", drawEmojis);
+  drawEmojis();
+  connect();
+})();
+</script>
+</body>
+</html>
