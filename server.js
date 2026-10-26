@@ -1,160 +1,459 @@
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
-const WebSocket = require("ws");
+'use strict';
 
-const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, "leaderboard.json");
-const PUBLIC_DIR = path.join(__dirname, "public");
+const fs = require('node:fs');
+const path = require('node:path');
+const http = require('node:http');
+const { randomUUID } = require('node:crypto');
+const { WebSocket, WebSocketServer } = require('ws');
 
+const PORT = Number(process.env.PORT) || 8080;
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const LEADERBOARD_FILE = path.join(DATA_DIR, 'leaderboard.json');
+const WEB_DIR = path.join(__dirname, '..', 'www');
+
+const MATCH_DURATION_MS = 30_000;
+const START_DELAY_MS = 4_000;
+const MAX_SCORE = 100_000;
+const LEADERBOARD_LIMIT = 100;
+const MAX_NAME_LENGTH = 20;
+const MAX_MESSAGE_BYTES = 4096;
+const RATE_WINDOW_MS = 10_000;
+const MAX_MESSAGES_PER_WINDOW = 80;
+
+// Explicit allow-list: clients cannot store arbitrary markup or unbounded emoji strings.
 const ALLOWED_EMOJIS = new Set([
-  "😎", "😀", "😃", "😄", "😁", "😆", "🥳", "🤩",
-  "😺", "🐱", "🐸", "🦊", "🐼", "🐵", "🐻", "🐰",
-  "👾", "🤖", "👻", "💀", "⭐", "🔥", "🍀", "💎"
+  '😎', '🐹', '🦊', '🤖', '🐸', '👾', '👽', '🐼', '🐯', '🐲', '🦄',
+  '🥷', '👑', '💀', '🚀', '⭐', '🐵', '🐻', '🐰', '🐨', '🦁',
+  '🐙', '🐢', '🐤', '🦋', '🔥', '⚡', '🌟', '🍀', '🎮', '🏆'
 ]);
+const DEFAULT_EMOJI = '🐹';
 
-function cleanName(value) {
-  if (typeof value !== "string") return "";
-  return value.replace(/[<>]/g, "").trim().replace(/\s+/g, " ").slice(0, 20);
-}
-
-function readLeaderboard() {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-let leaderboard = readLeaderboard();
-
-function saveLeaderboard() {
-  const tempFile = DATA_FILE + ".tmp";
-  fs.writeFileSync(tempFile, JSON.stringify(leaderboard, null, 2));
-  fs.renameSync(tempFile, DATA_FILE);
-}
-
-function publicLeaderboard() {
-  return leaderboard
-    .slice()
-    .sort((a, b) => (Number(b.bestScore) || 0) - (Number(a.bestScore) || 0))
-    .slice(0, 100);
-}
-
-const server = http.createServer((req, res) => {
-  const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
-  if (urlPath === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ ok: true }));
-  }
-
-  // Serve frontend files from ./public. Put your game's index.html there.
-  const requested = urlPath === "/" ? "index.html" : urlPath.replace(/^\/+/, "");
-  const filePath = path.resolve(PUBLIC_DIR, requested);
-  if (!filePath.startsWith(PUBLIC_DIR + path.sep) && filePath !== path.join(PUBLIC_DIR, "index.html")) {
-    res.writeHead(403);
-    return res.end("Forbidden");
-  }
-
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      return res.end("Frontend not found. Put your game HTML at public/index.html.");
-    }
-    const ext = path.extname(filePath).toLowerCase();
-    const types = {
-      ".html": "text/html; charset=utf-8",
-      ".js": "text/javascript; charset=utf-8",
-      ".css": "text/css; charset=utf-8",
-      ".json": "application/json; charset=utf-8",
-      ".png": "image/png",
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".svg": "image/svg+xml",
-      ".ico": "image/x-icon"
-    };
-    res.writeHead(200, { "Content-Type": types[ext] || "application/octet-stream" });
-    res.end(data);
-  });
-});
-
-const wss = new WebSocket.Server({ server });
 const clients = new Set();
+const queue = [];
+const leaderboard = loadLeaderboard();
+let saveTimer = null;
 
-function send(ws, payload) {
-  if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
+function normalizeName(value) {
+  if (typeof value !== 'string') return '';
+  return value.trim().replace(/\s+/g, ' ').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, MAX_NAME_LENGTH);
 }
+
+function normalizeEmoji(value) {
+  return typeof value === 'string' && ALLOWED_EMOJIS.has(value) ? value : null;
+}
+
+function loadLeaderboard() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8'));
+    const rows = Array.isArray(parsed) ? parsed : [];
+    const map = new Map();
+
+    for (const row of rows) {
+      const score = row && (Number.isSafeInteger(row.bestScore) ? row.bestScore : row.score);
+      if (!row || typeof row.name !== 'string' || !Number.isSafeInteger(score)) continue;
+      const name = normalizeName(row.name);
+      if (!name || score < 0 || score > MAX_SCORE) continue;
+      const key = name.toLocaleLowerCase('en-US');
+      const emoji = normalizeEmoji(row.emoji) || DEFAULT_EMOJI;
+      const old = map.get(key);
+      if (!old || score > old.bestScore) {
+        map.set(key, { key, name, bestScore: score, emoji });
+      } else if (!normalizeEmoji(old.emoji) && normalizeEmoji(row.emoji)) {
+        old.emoji = emoji;
+      }
+    }
+    return map;
+  } catch (error) {
+    if (error.code === 'ENOENT') return new Map();
+    console.error('Could not load leaderboard:', error.message);
+    return new Map();
+  }
+}
+
+function leaderboardRows() {
+  return [...leaderboard.values()]
+    .sort((a, b) => b.bestScore - a.bestScore || a.name.localeCompare(b.name))
+    .slice(0, LEADERBOARD_LIMIT)
+    .map((row, index) => ({
+      rank: index + 1,
+      name: row.name,
+      emoji: normalizeEmoji(row.emoji) || DEFAULT_EMOJI,
+      bestScore: row.bestScore
+    }));
+}
+
+function saveLeaderboardNow() {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tempFile = `${LEADERBOARD_FILE}.${process.pid}.tmp`;
+    fs.writeFileSync(tempFile, JSON.stringify([...leaderboard.values()], null, 2), 'utf8');
+    fs.renameSync(tempFile, LEADERBOARD_FILE);
+  } catch (error) {
+    console.error('Could not save online leaderboard:', error.message);
+  }
+}
+
+function scheduleSave() {
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    saveLeaderboardNow();
+  }, 250);
+  if (typeof saveTimer.unref === 'function') saveTimer.unref();
+}
+
+function send(client, payload) {
+  if (!client || client.readyState !== WebSocket.OPEN) return;
+  try { client.send(JSON.stringify(payload)); }
+  catch (error) { console.error('WebSocket send error:', error.message); }
+}
+
 function broadcast(payload) {
   for (const client of clients) send(client, payload);
 }
-function sendLeaderboard() {
-  broadcast({ type: "leaderboard", leaderboard: publicLeaderboard() });
+
+function broadcastPresence() {
+  broadcast({ type: 'presence', playersOnline: clients.size, playersWaiting: queue.length });
 }
 
-wss.on("connection", (ws) => {
-  clients.add(ws);
-  send(ws, { type: "welcome", leaderboard: publicLeaderboard(), emojis: Array.from(ALLOWED_EMOJIS) });
+function broadcastLeaderboard() {
+  broadcast({ type: 'leaderboard', leaderboard: leaderboardRows() });
+}
 
-  ws.on("message", (raw) => {
-    let msg;
-    try {
-      msg = JSON.parse(raw.toString());
-    } catch {
-      return send(ws, { type: "error", message: "Invalid JSON message." });
-    }
-
-    if (msg.type === "profile") {
-      const name = cleanName(msg.name);
-      const emoji = typeof msg.emoji === "string" && ALLOWED_EMOJIS.has(msg.emoji) ? msg.emoji : "😀";
-      if (!name) return send(ws, { type: "error", message: "Choose a player name (1–20 characters)." });
-
-      let player = leaderboard.find(p => p.key === name.toLowerCase());
-      if (!player) {
-        player = { key: name.toLowerCase(), name, emoji, bestScore: 0 };
-        leaderboard.push(player);
-      } else {
-        player.name = name;
-        player.emoji = emoji;
-      }
-      ws.playerKey = player.key;
-      try { saveLeaderboard(); } catch (e) {
-        console.error("Could not save leaderboard:", e.message);
-        return send(ws, { type: "error", message: "Could not save leaderboard on this server." });
-      }
-      send(ws, { type: "profile", player, leaderboard: publicLeaderboard() });
-      sendLeaderboard();
-      return;
-    }
-
-    if (msg.type === "score") {
-      const key = ws.playerKey;
-      if (!key) return send(ws, { type: "error", message: "Choose your profile before submitting a score." });
-      const score = Number(msg.score);
-      if (!Number.isSafeInteger(score) || score < 0 || score > 1000000) {
-        return send(ws, { type: "error", message: "Score must be a whole number from 0 to 1,000,000." });
-      }
-      const player = leaderboard.find(p => p.key === key);
-      if (!player) return send(ws, { type: "error", message: "Profile not found. Select your profile again." });
-      if (score > (Number(player.bestScore) || 0)) {
-        player.bestScore = score;
-        try { saveLeaderboard(); } catch (e) {
-          console.error("Could not save score:", e.message);
-          return send(ws, { type: "error", message: "Could not save score on this server." });
-        }
-      }
-      send(ws, { type: "score", bestScore: player.bestScore, leaderboard: publicLeaderboard() });
-      sendLeaderboard();
-      return;
-    }
-
-    if (msg.type === "ping") send(ws, { type: "pong", at: Date.now() });
+function persistProfile(client) {
+  if (!client.name) return;
+  const key = client.name.toLocaleLowerCase('en-US');
+  const old = leaderboard.get(key);
+  leaderboard.set(key, {
+    key,
+    name: old ? old.name : client.name,
+    bestScore: old ? old.bestScore : 0,
+    emoji: normalizeEmoji(client.emoji) || (old && normalizeEmoji(old.emoji)) || DEFAULT_EMOJI
   });
+  scheduleSave();
+  broadcastLeaderboard();
+}
 
-  ws.on("close", () => clients.delete(ws));
-  ws.on("error", () => clients.delete(ws));
+function updateLeaderboard(client, score) {
+  if (!client.name || !Number.isSafeInteger(score) || score < 0 || score > MAX_SCORE) return false;
+
+  const key = client.name.toLocaleLowerCase('en-US');
+  const existing = leaderboard.get(key);
+  const emoji = normalizeEmoji(client.emoji) || (existing && normalizeEmoji(existing.emoji)) || DEFAULT_EMOJI;
+
+  if (existing && score <= existing.bestScore) {
+    // Keep profile changes even when the player did not beat their record.
+    if (existing.emoji !== emoji) {
+      existing.emoji = emoji;
+      scheduleSave();
+      return true;
+    }
+    return false;
+  }
+
+  leaderboard.set(key, { key, name: existing ? existing.name : client.name, bestScore: score, emoji });
+  scheduleSave();
+  return true;
+}
+
+function removeFromQueue(client) {
+  let changed = false;
+  for (let i = queue.length - 1; i >= 0; i--) {
+    if (queue[i] === client) { queue.splice(i, 1); changed = true; }
+  }
+  if (changed) broadcastPresence();
+}
+
+function finishMatch(match, disconnectedClient = null) {
+  if (!match || match.ended) return;
+  match.ended = true;
+  if (match.deadline) clearTimeout(match.deadline);
+
+  const [first, second] = match.players;
+  if (first !== disconnectedClient) updateLeaderboard(first, first.score);
+  if (second !== disconnectedClient) updateLeaderboard(second, second.score);
+
+  let winnerId = null;
+  if (disconnectedClient) winnerId = disconnectedClient === first ? second.id : first.id;
+  else if (first.score !== second.score) winnerId = first.score > second.score ? first.id : second.id;
+
+  const result = {
+    type: 'match-result',
+    matchId: match.id,
+    players: match.players.map(player => ({
+      id: player.id,
+      name: player.name,
+      emoji: normalizeEmoji(player.emoji) || DEFAULT_EMOJI,
+      score: player.score,
+      forfeited: player === disconnectedClient
+    })),
+    winnerId,
+    draw: !disconnectedClient && first.score === second.score,
+    leaderboard: leaderboardRows()
+  };
+
+  for (const player of match.players) {
+    send(player, result);
+    if (player.match === match) player.match = null;
+    player.finished = true;
+  }
+  broadcastLeaderboard();
+  broadcastPresence();
+}
+
+function pairPlayers(first, second) {
+  const match = { id: randomUUID(), players: [first, second], ended: false, deadline: null };
+  for (const player of match.players) {
+    player.match = match;
+    player.score = 0;
+    player.finished = false;
+  }
+
+  const startAt = Date.now() + START_DELAY_MS;
+  for (const player of match.players) {
+    send(player, {
+      type: 'match-found',
+      matchId: match.id,
+      selfId: player.id,
+      startAt,
+      duration: MATCH_DURATION_MS,
+      players: match.players.map(opponent => ({
+        id: opponent.id,
+        name: opponent.name,
+        emoji: normalizeEmoji(opponent.emoji) || DEFAULT_EMOJI,
+        score: 0
+      }))
+    });
+  }
+  match.deadline = setTimeout(() => finishMatch(match), START_DELAY_MS + MATCH_DURATION_MS + 3000);
+  broadcastPresence();
+}
+
+function joinQueue(client) {
+  if (!client.name) return send(client, { type: 'error', message: 'Set a player name before matchmaking.' });
+  if (client.match) return send(client, { type: 'error', message: 'You are already in a match.' });
+
+  removeFromQueue(client);
+  const index = queue.findIndex(player =>
+    player !== client && player.readyState === WebSocket.OPEN && !player.match && player.name
+  );
+
+  if (index === -1) {
+    queue.push(client);
+    send(client, { type: 'queue', status: 'waiting', playersWaiting: queue.length });
+    broadcastPresence();
+    return;
+  }
+  const [opponent] = queue.splice(index, 1);
+  pairPlayers(opponent, client);
+}
+
+function allowMessage(client) {
+  const now = Date.now();
+  if (now - client.rateWindowStart >= RATE_WINDOW_MS) {
+    client.rateWindowStart = now;
+    client.messageCount = 0;
+  }
+  client.messageCount += 1;
+  return client.messageCount <= MAX_MESSAGES_PER_WINDOW;
+}
+
+function sendMatchScores(match) {
+  const payload = {
+    type: 'match-score',
+    matchId: match.id,
+    players: match.players.map(player => ({
+      id: player.id,
+      name: player.name,
+      emoji: normalizeEmoji(player.emoji) || DEFAULT_EMOJI,
+      score: player.score,
+      finished: player.finished
+    }))
+  };
+  for (const player of match.players) send(player, payload);
+}
+
+function handleMessage(client, raw) {
+  if (!allowMessage(client)) {
+    send(client, { type: 'error', message: 'Too many messages. Slow down and try again.' });
+    return;
+  }
+
+  let message;
+  try { message = JSON.parse(raw.toString()); }
+  catch { return send(client, { type: 'error', message: 'Invalid message format.' }); }
+  if (!message || typeof message.type !== 'string') return;
+
+  if (message.type === 'hello') {
+    const name = normalizeName(message.name);
+    if (!name) return send(client, { type: 'error', message: 'Enter a valid player name to connect.' });
+    if (client.match || queue.includes(client)) {
+      return send(client, { type: 'error', message: 'Leave matchmaking before changing your profile.' });
+    }
+
+    const requestedEmoji = normalizeEmoji(message.emoji);
+    const key = name.toLocaleLowerCase('en-US');
+    const existing = leaderboard.get(key);
+    client.name = name;
+    client.emoji = requestedEmoji || (existing && normalizeEmoji(existing.emoji)) || DEFAULT_EMOJI;
+
+    // Existing records are migrated in place; scores are never reset by profile setup.
+    persistProfile(client);
+    send(client, {
+      type: 'welcome',
+      playerId: client.id,
+      playersOnline: clients.size,
+      emoji: client.emoji,
+      leaderboard: leaderboardRows()
+    });
+    return;
+  }
+
+  if (message.type === 'set-profile') {
+    if (!client.name) return send(client, { type: 'error', message: 'Send hello with a player name first.' });
+    if (client.match || queue.includes(client)) {
+      return send(client, { type: 'error', message: 'Leave matchmaking before changing your profile.' });
+    }
+    const name = message.name === undefined ? client.name : normalizeName(message.name);
+    if (!name) return send(client, { type: 'error', message: 'Enter a valid player name.' });
+    const emoji = message.emoji === undefined ? client.emoji : normalizeEmoji(message.emoji);
+    if (!emoji) return send(client, { type: 'error', message: 'That profile emoji is not allowed.' });
+
+    const oldKey = client.name.toLocaleLowerCase('en-US');
+    const newKey = name.toLocaleLowerCase('en-US');
+    const oldRecord = leaderboard.get(oldKey);
+    const existingRecord = leaderboard.get(newKey);
+    if (oldKey !== newKey) leaderboard.delete(oldKey);
+
+    const bestScore = Math.max(oldRecord ? oldRecord.bestScore : 0, existingRecord ? existingRecord.bestScore : 0);
+    leaderboard.set(newKey, {
+      key: newKey,
+      name,
+      bestScore,
+      emoji
+    });
+    client.name = name;
+    client.emoji = emoji;
+    scheduleSave();
+    broadcastLeaderboard();
+    send(client, { type: 'profile-updated', name: client.name, emoji: client.emoji });
+    return;
+  }
+
+  if (message.type === 'leaderboard') {
+    send(client, { type: 'leaderboard', leaderboard: leaderboardRows() });
+    return;
+  }
+
+  if (message.type === 'queue') return joinQueue(client);
+
+  if (message.type === 'leave') {
+    removeFromQueue(client);
+    if (client.match) finishMatch(client.match, client);
+    send(client, { type: 'left' });
+    return;
+  }
+
+  if (message.type === 'score' || message.type === 'finish') {
+    const match = client.match;
+    if (!match || match.id !== message.matchId || match.ended || client.finished) return;
+    const score = Number(message.score);
+    if (!Number.isSafeInteger(score) || score < client.score || score < 0 || score > MAX_SCORE) {
+      return send(client, { type: 'error', message: 'Invalid match score.' });
+    }
+    client.score = score;
+    if (message.type === 'finish') client.finished = true;
+    sendMatchScores(match);
+    if (match.players.every(player => player.finished)) finishMatch(match);
+  }
+}
+
+const server = http.createServer((request, response) => {
+  const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+
+  if (url.pathname === '/health') {
+    response.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+    response.end(JSON.stringify({
+      status: 'ok',
+      playersOnline: clients.size,
+      playersWaiting: queue.length,
+      activeMatches: [...clients].filter(client => client.match).length / 2
+    }));
+    return;
+  }
+
+  if (url.pathname === '/leaderboard') {
+    response.writeHead(200, {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+      'access-control-allow-origin': '*'
+    });
+    response.end(JSON.stringify(leaderboardRows().map(row => ({
+      ...row,
+      score: row.bestScore
+    }))));
+    return;
+  }
+
+  const webFile = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
+  const contentTypes = {
+    'index.html': 'text/html; charset=utf-8',
+    'mole-mash-logo.png': 'image/png',
+    'mole-mash-scene.svg': 'image/svg+xml',
+    'meadow-mole.svg': 'image/svg+xml'
+  };
+  if (Object.prototype.hasOwnProperty.call(contentTypes, webFile)) {
+    try {
+      response.writeHead(200, { 'content-type': contentTypes[webFile], 'cache-control': 'no-store' });
+      response.end(fs.readFileSync(path.join(WEB_DIR, webFile)));
+    } catch (error) {
+      console.error(`Could not serve ${webFile}:`, error.message);
+      response.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+      response.end('Game page or asset could not be loaded.');
+    }
+    return;
+  }
+
+  response.writeHead(404, { 'content-type': 'application/json; charset=utf-8' });
+  response.end(JSON.stringify({ error: 'Not found' }));
 });
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Mole Mash server listening on port ${PORT}`);
+const webSockets = new WebSocketServer({ server, path: '/ws', maxPayload: MAX_MESSAGE_BYTES, perMessageDeflate: false });
+
+webSockets.on('connection', client => {
+  client.id = randomUUID();
+  client.name = '';
+  client.emoji = DEFAULT_EMOJI;
+  client.score = 0;
+  client.finished = false;
+  client.match = null;
+  client.rateWindowStart = Date.now();
+  client.messageCount = 0;
+  clients.add(client);
+  broadcastPresence();
+
+  client.on('message', data => handleMessage(client, data));
+  client.on('close', () => {
+    clients.delete(client);
+    removeFromQueue(client);
+    if (client.match) finishMatch(client.match, client);
+    broadcastPresence();
+  });
+  client.on('error', error => console.error('WebSocket connection error:', error.message));
+});
+
+function shutdown() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  saveLeaderboardNow();
+  for (const client of clients) {
+    try { client.close(1001, 'Server shutting down'); } catch {}
+  }
+  webSockets.close(() => server.close(() => process.exit(0)));
+  setTimeout(() => process.exit(0), 2000).unref();
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Mole Mash Emoji Leaderboard listening on port ${PORT}`);
 });
