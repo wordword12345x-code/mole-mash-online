@@ -9,7 +9,10 @@ const { WebSocket, WebSocketServer } = require('ws');
 const PORT = Number(process.env.PORT) || 8080;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const LEADERBOARD_FILE = path.join(DATA_DIR, 'leaderboard.json');
-const WEB_DIR = path.join(__dirname, '..', 'www');
+const WEB_DIR = [
+  path.join(__dirname, 'www'),
+  path.join(__dirname, '..', 'www')
+].find(directory => fs.existsSync(path.join(directory, 'index.html'))) || path.join(__dirname, 'www');
 
 const MATCH_DURATION_MS = 30_000;
 const START_DELAY_MS = 4_000;
