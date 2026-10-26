@@ -1,16 +1,20 @@
 {
-  "name": "mole-mash-online",
+  "name": "mole-mash-shop",
   "version": "1.0.0",
-  "private": true,
-  "description": "Mole Mash online leaderboard and emoji profiles",
-  "main": "server.js",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:online": "node online-server\\server.js"
   },
-  "engines": {
-    "node": ">=18"
-  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
-    "ws": "^8.18.0"
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "ws": "^8.22.0"
   }
 }
