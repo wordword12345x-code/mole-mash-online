@@ -17,7 +17,6 @@ const WEB_DIR = [
 const MATCH_DURATION_MS = 30_000;
 const START_DELAY_MS = 4_000;
 const MAX_SCORE = 100_000;
-const LEADERBOARD_LIMIT = 100;
 const MAX_NAME_LENGTH = 20;
 const MAX_MESSAGE_BYTES = 4096;
 const RATE_WINDOW_MS = 10_000;
@@ -60,17 +59,31 @@ function loadLeaderboard() {
         continue;
       }
       const name = normalizeName(row.name);
-      if (!name || score <= 0 || score > MAX_SCORE) {
+      if (!name || score < 0 || score > MAX_SCORE) {
         needsLeaderboardCleanup = true;
         continue;
       }
       const key = name.toLocaleLowerCase('en-US');
       const emoji = normalizeEmoji(row.emoji) || DEFAULT_EMOJI;
+      const matchesPlayed = Number.isSafeInteger(row.matchesPlayed) && row.matchesPlayed >= 0 ? row.matchesPlayed : 0;
+      const wins = Number.isSafeInteger(row.wins) && row.wins >= 0 ? row.wins : 0;
+      const totalScore = Number.isSafeInteger(row.totalScore) && row.totalScore >= 0 ? row.totalScore : 0;
       const old = map.get(key);
       if (!old || score > old.bestScore) {
-        map.set(key, { key, name, bestScore: score, emoji });
-      } else if (!normalizeEmoji(old.emoji) && normalizeEmoji(row.emoji)) {
-        old.emoji = emoji;
+        map.set(key, {
+          key,
+          name,
+          bestScore: score,
+          emoji,
+          matchesPlayed: Math.max(old ? old.matchesPlayed : 0, matchesPlayed),
+          wins: Math.max(old ? old.wins : 0, wins),
+          totalScore: Math.max(old ? old.totalScore : 0, totalScore)
+        });
+      } else if (old) {
+        old.matchesPlayed = Math.max(old.matchesPlayed, matchesPlayed);
+        old.wins = Math.max(old.wins, wins);
+        old.totalScore = Math.max(old.totalScore, totalScore);
+        if (!normalizeEmoji(old.emoji) && normalizeEmoji(row.emoji)) old.emoji = emoji;
       }
       if (old) needsLeaderboardCleanup = true;
     }
@@ -85,12 +98,14 @@ function loadLeaderboard() {
 function leaderboardRows() {
   return [...leaderboard.values()]
     .sort((a, b) => b.bestScore - a.bestScore || a.name.localeCompare(b.name))
-    .slice(0, LEADERBOARD_LIMIT)
     .map((row, index) => ({
       rank: index + 1,
       name: row.name,
       emoji: normalizeEmoji(row.emoji) || DEFAULT_EMOJI,
-      bestScore: row.bestScore
+      bestScore: row.bestScore,
+      matchesPlayed: row.matchesPlayed,
+      wins: row.wins,
+      totalScore: row.totalScore
     }));
 }
 
@@ -149,22 +164,30 @@ function updateLeaderboard(client, score) {
 
   const key = client.name.toLocaleLowerCase('en-US');
   const existing = leaderboard.get(key);
-  if (!existing && score === 0) return false;
   const emoji = normalizeEmoji(client.emoji) || (existing && normalizeEmoji(existing.emoji)) || DEFAULT_EMOJI;
 
-  if (existing && score <= existing.bestScore) {
-    // Keep profile changes even when the player did not beat their record.
-    if (existing.emoji !== emoji) {
-      existing.emoji = emoji;
-      scheduleSave();
-      return true;
-    }
-    return false;
-  }
-
-  leaderboard.set(key, { key, name: existing ? existing.name : client.name, bestScore: score, emoji });
+  leaderboard.set(key, {
+    key,
+    name: existing ? existing.name : client.name,
+    bestScore: Math.max(existing ? existing.bestScore : 0, score),
+    emoji,
+    matchesPlayed: existing ? existing.matchesPlayed : 0,
+    wins: existing ? existing.wins : 0,
+    totalScore: existing ? existing.totalScore : 0
+  });
   scheduleSave();
   return true;
+}
+
+function recordMatch(client, won) {
+  if (!client.name || !Number.isSafeInteger(client.score) || client.score < 0 || client.score > MAX_SCORE) return;
+  updateLeaderboard(client, client.score);
+  const record = leaderboard.get(client.name.toLocaleLowerCase('en-US'));
+  if (!record) return;
+  record.matchesPlayed = Math.min(Number.MAX_SAFE_INTEGER, record.matchesPlayed + 1);
+  record.wins = Math.min(Number.MAX_SAFE_INTEGER, record.wins + (won ? 1 : 0));
+  record.totalScore = Math.min(Number.MAX_SAFE_INTEGER, record.totalScore + client.score);
+  scheduleSave();
 }
 
 function removeFromQueue(client) {
@@ -181,12 +204,12 @@ function finishMatch(match, disconnectedClient = null) {
   if (match.deadline) clearTimeout(match.deadline);
 
   const [first, second] = match.players;
-  if (first !== disconnectedClient) updateLeaderboard(first, first.score);
-  if (second !== disconnectedClient) updateLeaderboard(second, second.score);
 
   let winnerId = null;
   if (disconnectedClient) winnerId = disconnectedClient === first ? second.id : first.id;
   else if (first.score !== second.score) winnerId = first.score > second.score ? first.id : second.id;
+  recordMatch(first, first.id === winnerId);
+  recordMatch(second, second.id === winnerId);
 
   const result = {
     type: 'match-result',
@@ -337,12 +360,18 @@ function handleMessage(client, raw) {
     if (oldKey !== newKey) leaderboard.delete(oldKey);
 
     if (oldRecord || existingRecord) {
+      const mergedRecords = oldRecord === existingRecord
+        ? [oldRecord]
+        : [oldRecord, existingRecord].filter(Boolean);
       const bestScore = Math.max(oldRecord ? oldRecord.bestScore : 0, existingRecord ? existingRecord.bestScore : 0);
       leaderboard.set(newKey, {
         key: newKey,
         name,
         bestScore,
-        emoji
+        emoji,
+        matchesPlayed: Math.min(Number.MAX_SAFE_INTEGER, mergedRecords.reduce((total, record) => total + record.matchesPlayed, 0)),
+        wins: Math.min(Number.MAX_SAFE_INTEGER, mergedRecords.reduce((total, record) => total + record.wins, 0)),
+        totalScore: Math.min(Number.MAX_SAFE_INTEGER, mergedRecords.reduce((total, record) => total + record.totalScore, 0))
       });
       scheduleSave();
       broadcastLeaderboard();
