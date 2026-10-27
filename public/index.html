@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="theme-color" content="#090d22">
-<meta name="description" content="Mole Mash — a fast, colorful arcade challenge. Build combos, unlock upgrades, and chase your high score.">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Mole Mash — Arcade Edition</title>
+<meta name="description" content="Burrow Blitz is a quick-fire mole arcade game. Chain hits, collect rewards, and beat your best score.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mole Mash: Burrow Blitz</title>
 <link rel="icon" type="image/png" href="mole-mash-logo.png">
 <style>
 :root{--bg:#090d22;--panel:#121b3c;--panel2:#192753;--line:#3856a5;--gold:#ffd166;--mint:#54f0bd;--pink:#ff63c3;--text:#f7f8ff;--muted:#aab8df;--danger:#ff657a}
@@ -48,6 +48,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .side-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.side-buttons button{font-size:12px;padding:10px 5px}
 .center{min-width:0}
 .game-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.game-head h2{margin:0;font-size:19px}
+.mode-picker{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#080f29a8}.mode-picker label{font-size:12px;font-weight:850;color:var(--muted)}.mode-picker select{flex:1;min-width:150px;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#121b3c;color:var(--text);font-weight:800}.mode-description{width:100%;font-size:11px;line-height:1.4;color:var(--muted);margin:0}
 .pill{font-size:12px;border:1px solid var(--line);background:#ffffff0a;border-radius:999px;padding:6px 10px;color:var(--muted)}
 .board-wrap{position:relative;background:#235b42;border:5px solid #3b9864;border-radius:24px;padding:clamp(10px,2vw,20px);box-shadow:0 12px 30px #0003;overflow:hidden;touch-action:manipulation}
 .board-wrap:before{content:"✦  ✿    ✦      ✿    ✦";position:absolute;top:7px;left:15px;right:15px;color:#b4ff91;opacity:.55;letter-spacing:22px;pointer-events:none;white-space:nowrap;overflow:hidden}
@@ -61,6 +62,8 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .mole .eyes{font-size:clamp(10px,1.4vw,16px);line-height:1;position:absolute;top:9%;left:0;right:0;text-align:center}
 .mole .snout{font-size:clamp(32px,5vw,58px);line-height:1;display:flex;align-items:center;justify-content:center;flex:1;min-height:0;width:100%;transform:translateY(7%);filter:drop-shadow(0 2px 1px #0004)}
 .mole.bomb{background:linear-gradient(140deg,#747b90,#30374d 70%);border-color:#151c32}
+.mole.speedy{background:linear-gradient(140deg,#e0b0ff,#8b5ad4 68%,#4b2d83);border-color:#e9ceff;box-shadow:0 0 16px #c084fc55}
+.mole.tricky{background:linear-gradient(140deg,#a7f3d0,#0f9f83 68%,#075747);border-color:#9fffe3;box-shadow:0 0 18px #34d39966}
 
 /* Safe map-specific mob styles */
 .mole.map-meadow{background:linear-gradient(140deg,#d99a68,#9a542e 65%,#63321f);border-color:#69371f}
@@ -92,6 +95,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .shop-foot{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:7px}
 .price{color:var(--gold);font-weight:850;font-size:12px}.buy-btn{padding:6px 9px;font-size:11px;border-radius:8px}
 .shop-note{font-size:11px;color:var(--muted);text-align:center;margin:12px 0 0}
+.game-controls button[hidden]{display:none!important}.custom-item-builder{margin-top:12px;padding:12px;border:1px solid #ffffff24;border-radius:14px;background:#080f29a8;display:grid;gap:9px}.custom-item-builder h3{margin:0;font-size:14px}.custom-item-builder .builder-grid{display:grid;grid-template-columns:80px minmax(0,1fr);gap:8px}.custom-item-builder input,.custom-item-builder select{width:100%;min-width:0;padding:10px;border-radius:9px;border:1px solid var(--line);background:#121b3c;color:var(--text)}.custom-item-builder .builder-help{font-size:11px;color:var(--muted);line-height:1.4}.custom-item-actions{display:flex;gap:8px;flex-wrap:wrap}.custom-item-actions button{flex:1;min-width:100px}
 .bottom-nav{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:15px}
 .nav-card{padding:13px 8px;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;font-size:12px}.nav-card span{display:block;font-size:23px;margin-bottom:5px}
 .footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:11px;padding:16px 2px 3px}
@@ -306,6 +310,11 @@ button { min-height:var(--tap-size); }
 img, svg { max-width:100%; }
 .brand-icon, .avatar, .shop-icon, .nav-card span, .achievement .badge-icon { flex-shrink:0; }
 button, .nav-card, .wallet-chip, .pill { overflow-wrap:anywhere; }
+/* Keep dynamic labels readable in narrow cards and modal layouts. */
+.modal, .modal * { min-width:0; }
+.modal h2, .modal h3, .modal p, .modal small, .modal label, .modal button, .achievement, .option-card, .shop-item, .world-item-copy, .world-card-item { overflow-wrap:anywhere; word-break:normal; }
+.modal p, .modal small, .achievement small, .option-card p { line-height:1.45; }
+.modal button { white-space:normal; }
 .game-grid, .mobile-hud, .powerups, .bottom-nav { min-width:0; }
 .mobile-hud-card, .stat, .shop-item, .option-card { min-width:0; }
 .setting-row > * { min-width:0; }
@@ -988,10 +997,28 @@ button:focus-visible{outline:3px solid var(--neon-blue);outline-offset:3px}
 @keyframes hitFloat{0%{opacity:0;transform:translate(-50%,8px) scale(.65)}18%{opacity:1;transform:translate(-50%,-5px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-58px) scale(.94)}}
 .hit-spark{position:fixed;z-index:69;width:7px;height:7px;border-radius:50%;pointer-events:none;background:#fff4b0;box-shadow:0 0 12px #ffd166;animation:sparkBurst .42s ease-out forwards}
 @keyframes sparkBurst{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.1)}}
-@media(max-width:720px){.topbar{border-radius:17px;padding:11px}.board-wrap{border-radius:21px}.hole{min-height:0}.game-grid{gap:clamp(7px,2vw,11px)}.panel{backdrop-filter:none}.top-actions{gap:7px}.top-actions button{min-height:42px}.game-controls button{min-height:46px}.powerups button{min-height:45px}}
+@media(max-width:720px){.mode-picker{padding:9px;gap:7px}.mode-picker select{width:100%;min-width:0}.mode-picker label{font-size:11px}.mode-picker .mode-description{font-size:10px}.topbar{border-radius:17px;padding:11px}.board-wrap{border-radius:21px}.hole{min-height:0}.game-grid{gap:clamp(7px,2vw,11px)}.panel{backdrop-filter:none}.top-actions{gap:7px}.top-actions button{min-height:42px}.game-controls button{min-height:46px}.powerups button{min-height:45px}}
 @media(max-width:420px){.app{padding-left:8px;padding-right:8px}.topbar{padding:10px}.board-wrap{padding:7px;border-width:2px}.hole{border-width:2px}.mole{border-width:2px}.game-head h2{font-size:17px}.combo{padding:9px}.nav-card{padding:10px 5px}}
 @media(prefers-reduced-motion:reduce){.hit-float,.hit-spark{animation:none;display:none}.board-wrap.impact{animation:none}}
 
+
+/* Final responsive UI safeguards: prevent settings rows and modals from overflowing on phones. */
+.modal{width:min(560px,100%);max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);padding:clamp(14px,3.5vw,22px)}
+#modalContent{min-width:0;overflow-wrap:anywhere}
+.setting-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,42%);align-items:center;column-gap:12px;row-gap:7px}
+.setting-row>label,.setting-row>span{min-width:0;overflow-wrap:anywhere}
+.setting-row select,.setting-row input[type=text],.setting-row input[type=file],.setting-row button{width:100%;max-width:100%;min-width:0}
+.setting-row.graphics-quality-row select{width:100%;max-width:100%;min-width:0}
+.graphics-quality-help{overflow-wrap:anywhere}
+@media(max-width:480px){
+  .modal-backdrop{padding:8px;align-items:center}
+  .modal{border-radius:17px;max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);padding:13px}
+  .modal-head h2{font-size:clamp(17px,5vw,22px)}
+  .setting-row{grid-template-columns:minmax(0,1fr) minmax(105px,45%);gap:8px;padding:9px 0;font-size:12px}
+  .setting-row select,.setting-row input[type=text],.setting-row input[type=file],.setting-row button{font-size:12px;min-height:40px;padding:8px}
+  .graphics-quality-help{font-size:11px;margin:0 0 8px}
+  .daily-countdown{max-width:100%;overflow:hidden}
+}
 </style>
 
 <style id="daily-24h-ghost-timer">
@@ -1028,9 +1055,213 @@ body[data-graphics="low"] .mole{filter:none}
   body[data-graphics="low"] .toast{backdrop-filter:none;-webkit-backdrop-filter:none}
 }
 </style>
+
+<style id="chat-style-modal-scroll">
+/* Chat-like modal scrolling: scrollbar hidden, content still scrolls normally. */
+.modal-backdrop:not(.hidden) {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px)) !important;
+}
+.modal {
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(560px, 100%) !important;
+  max-width: 560px !important;
+  max-height: calc(100vh - 20px) !important;
+  max-height: calc(100dvh - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+.modal-head {
+  position: relative !important;
+  flex: 0 0 auto !important;
+}
+#modalContent {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  scrollbar-width: none !important;       /* Firefox */
+  -ms-overflow-style: none !important;    /* legacy Edge */
+  scroll-behavior: smooth;
+  padding: 2px 3px 16px 1px;
+}
+#modalContent::-webkit-scrollbar,
+.modal::-webkit-scrollbar,
+.modal-backdrop::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+.modal, #modalContent, .modal-backdrop {
+  scrollbar-color: transparent transparent !important;
+}
+@media (max-width: 720px) {
+  .modal-backdrop:not(.hidden) {
+    align-items: flex-end !important;
+    padding: max(8px, env(safe-area-inset-top, 0px)) 8px max(8px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .modal {
+    width: 100% !important;
+    max-width: none !important;
+    max-height: calc(100vh - 16px) !important;
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+    border-radius: 20px !important;
+  }
+  #modalContent {
+    overscroll-behavior: contain;
+    scroll-padding-block: 12px;
+  }
+}
+@media (max-height: 560px) {
+  .modal-backdrop:not(.hidden) { align-items: flex-start !important; }
+  .modal {
+    max-height: calc(100vh - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #modalContent { scroll-behavior: auto !important; }
+}
+</style>
+
+
+
+
+<style id="match-screen-no-page-scroll">
+/* Mobile match screen: keep the first page inside the viewport; menus keep their own scrolling. */
+@media (max-width:720px) {
+  html, body { width:100%; height:100%; min-height:0; overflow:hidden !important; overscroll-behavior:none; }
+  body { position:fixed; inset:0; }
+  .app { height:100vh; height:100dvh; min-height:0; max-height:100dvh; overflow:hidden;
+    display:flex; flex-direction:column; padding:calc(5px + env(safe-area-inset-top,0px)) 8px 0; }
+  .topbar { flex:0 0 auto; margin-bottom:5px; padding:2px 1px 5px; gap:5px; }
+  .brand-icon { width:34px; height:34px; }
+  .top-actions { gap:4px; }
+  .wallet-chip { padding:3px 5px; }
+  .layout { display:flex; flex:1 1 auto; min-height:0; overflow:hidden; gap:0; }
+  .profile-panel, .shop-panel { display:none !important; }
+  .center { display:flex; flex-direction:column; flex:1 1 auto; min-height:0; min-width:0; width:100%; overflow:hidden; gap:0; }
+  .game-head { flex:0 0 auto; margin:0 2px 4px; gap:4px; }
+  .game-head h2 { font-size:14px; }
+  .game-head-status { gap:3px; }
+  .pill { padding:3px 5px; font-size:7px; }
+  .mobile-hud { flex:0 0 auto; gap:4px; margin:0 0 5px; }
+  .mobile-hud-card { padding:4px 2px; }
+  .mobile-hud-card small { font-size:7px; }
+  .mobile-hud-card strong { margin-top:2px; font-size:13px; }
+  .mode-picker { flex:0 0 auto; margin:0 0 5px; padding:6px 8px; }
+  .mode-picker label { font-size:9px; margin-bottom:3px; }
+  .mode-picker select { min-height:32px; padding:5px 8px; font-size:11px; }
+  .mode-description { display:none !important; }
+  .online-match-banner { flex:0 0 auto; margin-bottom:4px; padding:4px 6px; font-size:10px; }
+  .board-wrap { flex:1 1 auto; min-height:0; width:min(100%, calc(100dvh - 390px)); max-height: min(34dvh, 300px); aspect-ratio:1 / 1; align-self:center;
+    padding:6px; border-width:2px; border-radius:15px; }
+  .game-grid { height:100%; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); gap:5px; }
+  .hole { width:100%; height:100%; min-height:0; aspect-ratio:auto; }
+  .mole .snout { font-size:clamp(25px,8vw,42px); }
+  .mole .eyes { font-size:clamp(10px,3vw,14px); }
+  .board-overlay { padding:8px; }
+  .board-overlay .big-emoji { font-size:clamp(26px,8vw,40px); }
+  .board-overlay h2 { font-size:clamp(17px,5vw,22px); margin:4px 0; }
+  .board-overlay p { font-size:10px; margin:4px 0 8px; }
+  .board-overlay button { min-height:38px; padding:7px 12px; }
+  .world-item-badge { flex:0 0 auto; font-size:9px; margin-top:2px; }
+  .combo { flex:0 0 auto; margin:4px 3px 0; gap:6px; }
+  .combo strong { font-size:9px; }
+  .combo-track { height:5px; }
+  .game-controls { flex:0 0 auto; grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:4px; margin-top:5px; }
+  .game-controls button { min-width:0; min-height:34px; padding:5px 2px; border-radius:9px; font-size:clamp(8px,2.5vw,10px); line-height:1.05; white-space:normal; }
+  .game-controls button span { font-size:8px; }
+  .powerups { flex:0 0 auto; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; margin-top:4px; }
+  .powerups button { min-height:32px; padding:4px 2px; font-size:8px; }
+  .powerups button span { font-size:8px; }
+  .bottom-nav { flex:0 0 auto; position:relative; left:auto; right:auto; bottom:auto; width:100%; max-width:none; margin-top:4px; padding:4px 2px calc(4px + env(safe-area-inset-bottom,0px));
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; box-shadow:none; }
+  .bottom-nav .nav-card { min-height:35px; padding:3px 1px; gap:2px; border-radius:8px; font-size:8px; line-height:1; }
+  .bottom-nav .nav-card span { font-size:15px; }
+  .footer { display:none !important; }
+  .modal-backdrop { position:fixed; inset:0; z-index:100; overflow:hidden; }
+  .modal { max-height:88dvh; overflow-y:auto; overscroll-behavior:contain; }
+}
+@media (max-width:720px) and (max-height:700px) {
+  .topbar { margin-bottom:3px; padding-bottom:3px; }
+  .brand h1 { font-size:16px; }
+  .mobile-hud-card { padding:3px 2px; }
+  .mode-picker { padding:4px 7px; margin-bottom:3px; }
+  .board-wrap { max-height: min(29dvh, 220px); width:min(100%, 29dvh); }
+  .combo { margin-top:3px; }
+  .game-controls { margin-top:3px; gap:3px; }
+  .game-controls button { min-height:30px; font-size:8px; }
+  .bottom-nav .nav-card { min-height:31px; }
+  .bottom-nav .nav-card span { font-size:13px; }
+}
+@media (max-width:380px) {
+  .bottom-nav .nav-card { font-size:7px; }
+  .game-head-status .pill { max-width:45%; }
+}
+</style>
+
+
+<style id="high-quality-mobile-performance-fix">
+/* Keep high-quality artwork, but avoid expensive per-frame filters on mobile GPUs. */
+@media (max-width: 900px), (pointer: coarse) {
+  body[data-graphics="high"] .board-wrap {
+    isolation: isolate;
+    contain: layout paint;
+    box-shadow: 0 5px 0 #102f2c, 0 8px 18px #001b1270;
+  }
+  body[data-graphics="high"] .game-grid,
+  body[data-graphics="high"] .hole {
+    contain: layout paint;
+  }
+  body[data-graphics="high"] .hole {
+    box-shadow: inset 0 5px 8px #0007, 0 3px 0 #205b39;
+  }
+  body[data-graphics="high"] .mole {
+    filter: drop-shadow(0 3px 2px #0007) !important;
+    transition: transform .12s cubic-bezier(.2,.9,.25,1.18) !important;
+  }
+  body[data-graphics="high"] .mole .eyes {
+    filter: none !important;
+  }
+  body[data-graphics="high"] .bottom-nav,
+  body[data-graphics="high"] .modal,
+  body[data-graphics="high"] .toast {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+/* Stop decorative animation costs when the player requests reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+/* Prevent grid children and long menu labels from forcing horizontal overflow. */
+.game-controls > *, .powerups > *, .bottom-nav > *, .modal-grid > *,
+.shop-item, .setting-row, .nav-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+</style>
 </head>
 <body class="loading-active" data-theme="arcade">
-<div class="loading-screen" id="loadingScreen" role="status" aria-label="Loading Mole Mash">
+<div class="loading-screen" id="loadingScreen" role="status" aria-label="Loading Mole Mash: Burrow Blitz">
   <div class="loading-card">
     <div class="loading-brand-mark"><img src="mole-mash-logo.png" alt="Mole Mash logo with a mole wearing glasses and holding a mallet" width="768" height="512"></div>
     <div class="loading-divider"></div>
@@ -1040,40 +1271,40 @@ body[data-graphics="low"] .mole{filter:none}
 </div>
 <div class="app">
   <header class="topbar">
-    <div class="brand player-brand"><div class="avatar" id="headerAvatar" aria-hidden="true">😀</div><div><h1 id="headerPlayerName">Mole Hunter</h1><small><span class="player-brand-level">LEVEL <span id="headerLevel">1</span></span></small></div></div>
+    <div class="brand player-brand"><div class="avatar" id="headerAvatar" aria-hidden="true">😀</div><div><h1 id="headerPlayerName">Burrow Blitz</h1><small><span class="player-brand-level">LEVEL <span id="headerLevel">1</span></span></small></div></div>
     <div class="top-actions">
       <div class="wallet">
-        <div class="wallet-chip" aria-label="Coins">🪙 <b id="coins">0</b> <span class="wallet-label">coins</span></div>
-        <div class="wallet-chip" aria-label="Gems">💎 <b id="gems">0</b> <span class="wallet-label">gems</span></div>
+        <div class="wallet-chip" aria-label="Coins">🪙 <b id="coins">0</b> <span class="wallet-label">Coins</span></div>
+        <div class="wallet-chip" aria-label="Gems">💎 <b id="gems">0</b> <span class="wallet-label">Gems</span></div>
       </div>
-      <button class="subtle" id="soundBtn" type="button" title="Mute all audio" aria-label="Mute all audio" aria-pressed="false"><span class="sound-icon" aria-hidden="true">🔊</span><span class="sound-label">Sound</span></button>
+      <button class="subtle" id="soundBtn" type="button" title="Unmute all audio" aria-label="Unmute all audio" aria-pressed="true"><span class="sound-icon" aria-hidden="true">🔇</span><span class="sound-label">Muted</span></button>
       <button class="subtle" id="settingsBtn" type="button" aria-label="Open settings" title="Settings"><span class="settings-icon" aria-hidden="true">⚙️</span><span class="settings-label">Settings</span></button>
     </div>
   </header>
  
   <main class="layout">
     <aside class="panel profile-panel">
-      <h2 class="section-title">👤 Player Profile</h2>
+      <h2 class="section-title">👤 Player Hub</h2>
       <div class="profile">
         <div class="avatar" id="avatar">😀</div>
         <div style="min-width:0;flex:1"><h3 id="playerName">Mole Hunter</h3><div class="muted small">Level <b id="level">1</b> · <span id="xpText">0 / 100 XP</span></div><div class="xp-track"><div class="xp-fill" id="xpFill"></div></div></div>
       </div>
       <div class="stats">
         <div class="stat"><span>⭐ SCORE</span><strong id="score">0</strong></div>
-        <div class="stat"><span>⏱️ TIME</span><strong id="time">30s</strong></div>
-        <div class="stat"><span>🪙 EARNED</span><strong class="gold-text" id="earned">0</strong></div>
+        <div class="stat"><span>⏱️ TIME LEFT</span><strong id="time">30s</strong></div>
+        <div class="stat"><span>🪙 COINS EARNED</span><strong class="gold-text" id="earned">0</strong></div>
         <div class="stat"><span>❤️ LIVES</span><strong class="lives" id="lives">❤️❤️❤️</strong></div>
-        <div class="stat wide"><span>🏅 RANK</span><strong id="rankBig" style="font-size:17px;color:var(--gold)">Rookie</strong></div>
+        <div class="stat wide"><span>🏅 PLAYER RANK</span><strong id="rankBig" style="font-size:17px;color:var(--gold)">Rookie</strong></div>
       </div>
       <div class="side-buttons">
-        <button data-modal="achievements">🏆 Achievements</button><button data-modal="skins">🎨 Mole Skins</button>
-        <button data-modal="stats">📊 Statistics</button><button data-modal="settings">⚙️ Settings</button>
+        <button data-modal="achievements">🏆 Trophies</button><button data-modal="skins">🎨 Mole Skins</button>
+        <button data-modal="stats">📊 Game Stats</button><button data-modal="settings">⚙️ Options</button>
       </div>
-      <div style="margin-top:16px"><div class="section-title"><span>🔥 Best Score</span><strong id="bestScore">0</strong></div><div class="muted small">Total hits: <b id="totalHits">0</b></div><div class="muted small" style="margin-top:5px">Games played: <b id="gamesPlayed">0</b></div></div>
+      <div style="margin-top:16px"><div class="section-title"><span>🔥 PERSONAL BEST</span><strong id="bestScore">0</strong></div><div class="muted small">Total hits: <b id="totalHits">0</b></div><div class="muted small" style="margin-top:5px">Rounds played: <b id="gamesPlayed">0</b></div></div>
     </aside>
  
     <section class="center">
-      <div class="game-head"><h2>🌿 Mole Meadow</h2><div class="game-head-status"><span class="pill speed-pill" id="speedLevel">⚡ SPEED x1.00</span><span class="pill" id="gameStatus">READY TO PLAY</span></div></div>
+      <div class="game-head"><h2>🌿 The Burrow</h2><div class="game-head-status"><span class="pill speed-pill" id="speedLevel">⚡ SPEED x1.00</span><span class="pill" id="gameStatus">READY TO PLAY</span></div></div>
       <div class="mobile-hud" aria-label="Round status">
         <div class="mobile-hud-card"><small>⭐ SCORE</small><strong id="mobileScore">0</strong></div>
         <div class="mobile-hud-card"><small>⏱ TIME</small><strong id="mobileTime">30s</strong></div>
@@ -1081,29 +1312,32 @@ body[data-graphics="low"] .mole{filter:none}
         <div class="mobile-hud-card"><small>🪙 EARNED</small><strong id="mobileEarned">0</strong></div>
       </div>
       <div class="online-match-banner" id="onlineMatchBanner" hidden></div>
+      <div class="mode-picker"><label for="gameModeSelect">🎮 CHOOSE YOUR MODE</label><select id="gameModeSelect" aria-describedby="modeDescription"><option value="classic">Classic · 30 sec sprint</option><option value="timeattack">Time Attack · 45 sec rush</option><option value="endless">Endless · 3 lives, no timer</option><option value="challenge">500-Point Challenge · 45 sec</option></select><p class="mode-description" id="modeDescription" aria-live="polite">A quick 30-second run. Chain hits, grab golden moles, and dodge bombs.</p></div>
       <div class="board-wrap" id="boardWrap" data-map="meadow">
         <div class="game-grid" id="grid" aria-label="Whack-a-mole game board"></div>
-        <div class="board-overlay" id="overlay"><div class="big-emoji">🐹</div><h2 id="overlayTitle">Ready, Hunter?</h2><p id="overlayText">Whack the moles, build combos, and collect coins to upgrade your gear.</p><button class="primary" id="overlayStart">▶ START GAME</button></div>
+        <div class="board-overlay" id="overlay"><div class="big-emoji">🐹</div><h2 id="overlayTitle">Ready to Burrow?</h2><p id="overlayText">Tap the moles, stack your combo, collect coins, and avoid the bombs!</p><button class="primary" id="overlayStart">▶ PLAY NOW</button></div>
       </div>
       <div id="worldItemBadge" class="world-item-badge" aria-live="polite"></div>
       <div class="combo"><strong>⚡ Combo x<span id="combo">1</span></strong><div class="combo-track"><div class="combo-fill" id="comboFill"></div></div></div>
       <div class="game-controls action-power-row" aria-label="Game controls and power-ups">
-        <button class="primary" id="startBtn">▶ Start Game</button>
+        <button class="primary" id="startBtn">▶ Play</button>
         <button id="pauseBtn" disabled>⏸ Pause</button>
-        <button class="subtle" id="restartBtn">↻ Restart</button>
-        <button id="slowPower">❄️ Slow-Mo <span class="muted" id="slowCount">0</span></button>
-        <button id="freezePower">🧊 Freeze <span class="muted" id="freezeCount">0</span></button>
-        <button id="doublePower">🪙 2× Coins <span class="muted" id="doubleCount">0</span></button>
-        <button id="heartPower">❤️ Extra Life <span class="muted" id="heartCount">0</span></button>
-        <button id="surgePower">🚀 Score Surge <span class="muted" id="surgeCount">0</span></button>
+        <button class="subtle" id="restartBtn">↻ New Round</button>
+        <button id="slowPower">❄️ Slow Time <span class="muted" id="slowCount">0</span></button>
+        <button id="freezePower">🧊 Time Freeze <span class="muted" id="freezeCount">0</span></button>
+        <button id="doublePower">🪙 Double Coins <span class="muted" id="doubleCount">0</span></button>
+        <button id="heartPower">❤️ Bonus Life <span class="muted" id="heartCount">0</span></button>
+        <button id="surgePower">🚀 Score Boost <span class="muted" id="surgeCount">0</span></button>
       </div>
+      <div id="customPowerups" class="powerups" aria-label="Your custom power-ups"></div>
     </section>
  
     <aside class="panel shop-panel">
-      <h2 class="section-title">🛍️ Item Shop <span class="pill">UPGRADES</span></h2>
+      <h2 class="section-title">🛍️ Power-Up Shop <span class="pill">GEAR UP</span></h2>
       <div class="shop-list" id="shopList"></div>
-      <p class="shop-note">Coins and unlocked items save automatically on this device.</p>
-      <button class="mint" style="width:100%;margin-top:12px" data-modal="skins">✨ Explore Mole Collection</button>
+      <p class="shop-note">Your coins and unlocked gear are saved on this device.</p>
+      <button class="mint" style="width:100%;margin-top:10px" data-modal="loadout">🎯 Select Items for Slots</button>
+      <button class="mint" style="width:100%;margin-top:8px" data-modal="skins">✨ Browse Mole Skins</button>
     </aside>
   </main>
  
@@ -1114,6 +1348,7 @@ body[data-graphics="low"] .mole{filter:none}
     <button class="nav-card" data-modal="achievements"><span>🏆</span>Badges</button>
     <button class="nav-card" data-modal="online"><span>🏅</span>Rank</button>
     <button class="nav-card" data-modal="daily"><span>🎁</span>Rewards</button>
+    <button class="nav-card" data-modal="missions"><span>📋</span>Missions</button>
     <button class="nav-card" data-modal="stats"><span>📊</span>Stats</button>
   </nav>
 </div>
@@ -1154,13 +1389,14 @@ function generatePlayerName(){
 }
 const defaults = {
   coins:0,gems:0,bestScore:0,totalHits:0,gamesPlayed:0,xp:0,level:1,
-  playerName:'',avatar:'😀',theme:'arcade',graphicsQuality:window.matchMedia&&window.matchMedia('(pointer:coarse)').matches?'low':'high',graphicsScale:100,mapId:'meadow',unlockedMaps:['meadow'],sound:true,muted:false,sfxVolume:65,musicVolume:80,difficulty:'easy',onlineName:'',
-  owned:{slow:0,time:0,double:0,golden:0,freeze:0,heart:0,surge:0},skins:['🐹'],skin:'🐹',
-  achievements:[],dailyDate:'',dailyStreak:0,stats:{totalScore:0,totalCoins:0,bombsHit:0},music:true
+  playerName:'',avatar:'😀',gameMode:'classic',theme:'arcade',graphicsQuality:window.matchMedia&&window.matchMedia('(pointer:coarse)').matches?'low':'high',graphicsScale:100,mapId:'meadow',unlockedMaps:['meadow'],sound:false,muted:true,sfxVolume:35,musicVolume:35,difficulty:'easy',onlineName:'',
+  owned:{slow:0,time:0,double:0,golden:0,freeze:0,heart:0,surge:0},weaponSlots:['slow','freeze','double'],customItems:[],skins:['🐹'],skin:'🐹',
+  achievements:[],dailyDate:'',dailyStreak:0,dailyMissions:{date:'',resetAt:0,progress:{hits:0,coins:0,games:0,special:0},claimed:[]},modeRecords:{classic:0,timeattack:0,endless:0,challenge:0},stats:{totalScore:0,totalCoins:0,bombsHit:0,specialHits:0,bestCombo:1},music:false
 };
 let save = loadSave();
-/* Start with a louder soundtrack on existing saves too; players can lower it in Settings. */
-if((save.musicVolume??50)<80)save.musicVolume=80;
+/* Keep optional audio quiet by default; players can enable it in Settings. */
+if(save.sfxVolume==null)save.sfxVolume=35;
+if(save.musicVolume==null)save.musicVolume=35;
 function loadSave(){
   const d = clone(defaults);
   d.playerName=generatePlayerName();
@@ -1169,7 +1405,11 @@ function loadSave(){
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
     const s = {...d,...raw,owned:{...d.owned,...raw.owned},stats:{...d.stats,...raw.stats},
       skins:Array.isArray(raw.skins)&&raw.skins.length?raw.skins:['🐹'],
+      weaponSlots:Array.isArray(raw.weaponSlots)?raw.weaponSlots.filter(x=>['slow','freeze','double','heart','surge'].includes(x)).slice(0,3):d.weaponSlots,
+      customItems:Array.isArray(raw.customItems)?raw.customItems.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&typeof x.effect==='string'&&Number.isFinite(Number(x.price))&&['slow','freeze','double','heart','surge'].includes(x.effect)).slice(0,20):[],
       achievements:Array.isArray(raw.achievements)?raw.achievements:[],
+      dailyMissions:raw.dailyMissions&&typeof raw.dailyMissions==='object'?{date:String(raw.dailyMissions.date||''),resetAt:Number(raw.dailyMissions.resetAt)||0,progress:{hits:0,coins:0,games:0,special:0,...(raw.dailyMissions.progress||{})},claimed:Array.isArray(raw.dailyMissions.claimed)?raw.dailyMissions.claimed:[]}:clone(d.dailyMissions),
+      modeRecords:{...d.modeRecords,...(raw.modeRecords||{})},
       unlockedMaps:Array.isArray(raw.unlockedMaps)&&raw.unlockedMaps.length?raw.unlockedMaps:['meadow']};
     if(typeof s.playerName!=='string'||!s.playerName.trim()){
       s.playerName=d.playerName;
@@ -1182,7 +1422,21 @@ function loadSave(){
     if(!['low','high'].includes(s.graphicsQuality))s.graphicsQuality=d.graphicsQuality;
     if(![75,100,125].includes(Number(s.graphicsScale)))s.graphicsScale=d.graphicsScale;
     else s.graphicsScale=Number(s.graphicsScale);
+    if(!['easy','normal','hard'].includes(s.difficulty))s.difficulty=d.difficulty;
+    if(!['arcade','forest','candy','space'].includes(s.theme))s.theme=d.theme;
     if(!(s.level>=1)) s.level = 1;
+    if(!['classic','timeattack','endless','challenge'].includes(s.gameMode))s.gameMode='classic';
+    for(const mode of Object.keys(d.modeRecords)){const value=Number(s.modeRecords[mode]);s.modeRecords[mode]=Number.isFinite(value)&&value>=0?Math.floor(value):0;}
+    for(const key of ['hits','coins','games','special']){const value=Number(s.dailyMissions.progress[key]);s.dailyMissions.progress[key]=Number.isFinite(value)&&value>=0?Math.floor(value):0;}
+    /* Migrate older calendar-based mission saves to a hidden 12-hour cycle. */
+    if(!Number.isFinite(Number(s.dailyMissions.resetAt))||Number(s.dailyMissions.resetAt)<0)s.dailyMissions.resetAt=0;
+    if(!s.dailyMissions.resetAt){
+      if(!s.dailyMissions.date||s.dailyMissions.date!==todayStr())s.dailyMissions={date:todayStr(),resetAt:Date.now()+12*60*60*1000,progress:{hits:0,coins:0,games:0,special:0},claimed:[]};
+      else s.dailyMissions.resetAt=Date.now()+12*60*60*1000;
+    }
+    if(s.dailyMissions.resetAt<=Date.now())s.dailyMissions={date:todayStr(),resetAt:Date.now()+12*60*60*1000,progress:{hits:0,coins:0,games:0,special:0},claimed:[]};
+    if(!Number.isFinite(Number(s.dailyClaimAt)) || Number(s.dailyClaimAt)<0)s.dailyClaimAt=0;
+    if(!Number.isFinite(Number(s.dailyStreak)) || Number(s.dailyStreak)<0)s.dailyStreak=0;
     return s;
   }catch(e){ shouldPersistGeneratedName=true;return d; }
 }
@@ -1194,9 +1448,11 @@ function writeSave(){
   catch(e){ if(!saveWarned){ saveWarned = true; showToast('Could not save progress on this device.'); } return false; }
 }
 function persist(){ if(!persistTimer) persistTimer = setTimeout(writeSave, 600); }
+/* One-time audio preference refresh: mute optional audio on the first launch of this edition. */
+if(!save.audioPrefsRefreshed){save.muted=true;save.sound=false;save.music=false;save.sfxVolume=35;save.musicVolume=35;save.audioPrefsRefreshed=true;writeSave();}
 if(shouldPersistGeneratedName)writeSave();
  
-let score=0,earned=0,lives=3,timeLeft=30,combo=1,comboHits=0,lastHit=0,running=false,paused=false,gameToken=0,roundStartedAt=0,speedStage=0,scoreBoostHits=0,
+let score=0,earned=0,lives=3,timeLeft=30,combo=1,comboHits=0,lastHit=0,running=false,paused=false,gameToken=0,roundStartedAt=0,speedStage=0,scoreBoostHits=0,currentRoundMode='classic',
     spawnTimer=null,tickTimer=null,activeTimeouts=[],slowUntil=0,freezeUntil=0,doubleActive=false,goldenHits=0,
     soundCtx=null,modalReturnFocus=null,pausedAt=0,currentHole=null,lastHole=null,resetArmed=false;
 const holes=[];
@@ -1212,7 +1468,7 @@ const shopItems=[
  {id:'heart',icon:'❤️',name:'Extra Life',desc:'Restore one lost life during a round.',price:180},
  {id:'surge',icon:'🚀',name:'Score Surge',desc:'Double points for your next 5 successful hits.',price:300}
 ];
-const skins=[{emoji:'🐹',name:'Classic Mole',cost:0},{emoji:'🐻',name:'Brown Bear',cost:180},{emoji:'🐼',name:'Panda Mole',cost:270},{emoji:'🦊',name:'Fox Mole',cost:380},{emoji:'🐸',name:'Frog Mole',cost:480},{emoji:'👽',name:'Alien Mole',cost:680},{emoji:'🤖',name:'Robot Mole',cost:900},{emoji:'🦄',name:'Cosmic Unicorn',cost:1350}];
+const skins=[{emoji:'🐹',name:'Classic Mole',cost:0},{emoji:'🐻',name:'Brown Bear',cost:180},{emoji:'🐼',name:'Panda Mole',cost:270},{emoji:'🦊',name:'Fox Mole',cost:380},{emoji:'🐸',name:'Frog Mole',cost:480},{emoji:'👽',name:'Alien Mole',cost:680},{emoji:'🤖',name:'Robot Mole',cost:900},{emoji:'🦄',name:'Cosmic Unicorn',cost:1350},{emoji:'🐲',name:'Dragon Mole',cost:1700},{emoji:'🦁',name:'Lion Mole',cost:2100},{emoji:'🐙',name:'Octo Mole',cost:2600},{emoji:'💀',name:'Skeleton Mole',cost:3200}];
 const achievementDefs=[
  {id:'first',icon:'🎯',name:'First Bonk',desc:'Hit your first mole.',test:()=>save.totalHits>=1,reward:25},
  {id:'ten',icon:'🔟',name:'Getting Warm',desc:'Land 10 total hits.',test:()=>save.totalHits>=10,reward:50},
@@ -1220,13 +1476,54 @@ const achievementDefs=[
  {id:'century',icon:'💯',name:'Century Club',desc:'Score 100 points in one round.',test:()=>save.bestScore>=100,reward:150},
  {id:'rich',icon:'💰',name:'Pocket Full',desc:'Hold 500 coins at once.',test:()=>save.coins>=500,reward:75},
  {id:'collector',icon:'🎨',name:'Collector',desc:'Own 4 mole skins.',test:()=>save.skins.length>=4,reward:100},
- {id:'veteran',icon:'🏅',name:'Veteran Hunter',desc:'Play 10 games.',test:()=>save.gamesPlayed>=10,reward:150}
+ {id:'veteran',icon:'🏅',name:'Veteran Hunter',desc:'Play 10 games.',test:()=>save.gamesPlayed>=10,reward:150},
+ {id:'combo',icon:'🔥',name:'Combo Master',desc:'Reach a x5 combo.',test:()=>Number(save.stats.bestCombo||1)>=5,reward:125},
+ {id:'specialist',icon:'✨',name:'Rare Find',desc:'Hit 10 special moles.',test:()=>Number(save.stats.specialHits||0)>=10,reward:125}
 ];
 const ranks=[{name:'Rookie',min:1,icon:'🌱'},{name:'Bronze',min:2,icon:'🥉'},{name:'Silver',min:4,icon:'🥈'},{name:'Gold',min:7,icon:'🥇'},{name:'Platinum',min:10,icon:'💠'},{name:'Diamond',min:15,icon:'💎'},{name:'Legend',min:20,icon:'👑'},{name:'Mythic',min:30,icon:'🔥'},{name:'Elite',min:40,icon:'⚔️'},{name:'Champion',min:50,icon:'🏆'},{name:'Master',min:65,icon:'🌟'},{name:'Ascendant',min:80,icon:'🌌'},{name:'Cosmic',min:100,icon:'🪐'}];
 function rankInfo(level){let current=ranks[0],next=null;for(const r of ranks){if(level>=r.min)current=r;else{next=r;break}}return{current,next}}
 function rankName(level){return rankInfo(level).current.name}
 function xpBetween(from,to){let s=0;for(let l=from;l<to;l++)s+=l*100;return s}
  
+const dailyMissionDefs=[
+ {id:'hits',icon:'🎯',name:'Sharp Shooter',desc:'Hit 20 moles today',goal:20,reward:100},
+ {id:'coins',icon:'🪙',name:'Coin Collector',desc:'Earn 150 coins today',goal:150,reward:125},
+ {id:'games',icon:'🎮',name:'Back for More',desc:'Finish 2 rounds today',goal:2,reward:150}
+];
+function ensureDailyMissions(){
+  const now=Date.now();
+  if(!save.dailyMissions||typeof save.dailyMissions!=='object')save.dailyMissions={date:todayStr(),resetAt:now+12*60*60*1000,progress:{hits:0,coins:0,games:0,special:0},claimed:[]};
+  const state=save.dailyMissions;
+  if(!Number.isFinite(Number(state.resetAt))||Number(state.resetAt)<=0)state.resetAt=now+12*60*60*1000;
+  if(Number(state.resetAt)<=now){
+    save.dailyMissions={date:todayStr(),resetAt:now+12*60*60*1000,progress:{hits:0,coins:0,games:0,special:0},claimed:[]};
+    persist();
+  }
+  if(!save.dailyMissions.progress)save.dailyMissions.progress={hits:0,coins:0,games:0,special:0};
+  if(!Array.isArray(save.dailyMissions.claimed))save.dailyMissions.claimed=[];
+  return save.dailyMissions;
+}
+function addMissionProgress(key,amount=1){
+  const missions=ensureDailyMissions();
+  missions.progress[key]=Math.max(0,Number(missions.progress[key]||0)+amount);
+  persist();
+}
+function renderDailyMissions(){
+  const missions=ensureDailyMissions();
+  const cards=dailyMissionDefs.map(m=>{
+    const progress=Math.min(m.goal,Number(missions.progress[m.id]||0));
+    const claimed=missions.claimed.includes(m.id);
+    const done=progress>=m.goal;
+    return `<div class="achievement ${done?'':'locked'}"><div class="badge-icon">${claimed?'✅':m.icon}</div><div style="flex:1;min-width:0"><b>${m.name}</b><small>${m.desc} · ${progress}/${m.goal} · Reward: ${m.reward} coins</small><div style="height:6px;border-radius:99px;background:#ffffff18;margin:7px 0;overflow:hidden"><div style="height:100%;width:${progress/m.goal*100}%;background:linear-gradient(90deg,#34d399,#ffd166)"></div></div><button type="button" class="${done&&!claimed?'gold':'subtle'}" data-claim-mission="${m.id}" ${!done||claimed?'disabled':''}>${claimed?'Reward claimed':done?'Claim reward':'In progress'}</button></div></div>`;
+  }).join('');
+  return `<p class="muted small">Missions refresh automatically. Progress is saved on this device.</p>${cards}`;
+}
+function claimDailyMission(id){
+  const mission=dailyMissionDefs.find(m=>m.id===id);const state=ensureDailyMissions();
+  if(!mission||state.claimed.includes(id)||Number(state.progress[id]||0)<mission.goal)return;
+  state.claimed.push(id);save.coins+=mission.reward;save.stats.totalCoins+=mission.reward;writeSave();updateUI();showToast(`🎁 ${mission.name} complete! +${mission.reward} coins`);openModal('missions');
+}
+
 function renderGrid(){
   const grid=$('grid');grid.innerHTML='';holes.length=0;
   const frag=document.createDocumentFragment();
@@ -1255,9 +1552,10 @@ function getSpeedMultiplier(){const hardMode=!isOnlineRound&&save.difficulty==='
 function updateHUD(){
   const stage=getSpeedStage();speedStage=stage;
   setText('speedLevel','⚡ SPEED x'+getSpeedMultiplier().toFixed(2));
-  setText('coins',save.coins);setText('score',score);setText('time',Math.max(0,timeLeft)+'s');setText('earned',earned);
+  const timeDisplay=currentRoundMode==='endless'?'∞':Math.max(0,timeLeft)+'s';
+  setText('coins',save.coins);setText('score',score);setText('time',timeDisplay);setText('earned',earned);
   const l=Math.max(0,Math.min(3,lives));const livesText='❤️'.repeat(l)+'🖤'.repeat(3-l);setText('lives',livesText);
-  setText('mobileScore',score);setText('mobileTime',Math.max(0,timeLeft)+'s');setText('mobileLives',livesText);setText('mobileEarned',earned);
+  setText('mobileScore',score);setText('mobileTime',timeDisplay);setText('mobileLives',livesText);setText('mobileEarned',earned);
   setText('combo',combo);setScale('comboFill',Math.min(100,comboHits*20)/100);
   setText('totalHits',save.totalHits);setText('level',save.level);
   setText('surgeCount',scoreBoostHits>0?scoreBoostHits+' left':'×'+(save.owned.surge||0));
@@ -1278,6 +1576,15 @@ function renderPlayerAvatar(id){
   if(save.avatarImage){node.innerHTML='';const img=document.createElement('img');img.src=save.avatarImage;img.alt='Custom player profile image';img.style.pointerEvents='none';node.appendChild(img);}
   else{node.textContent=save.avatar||'😀';}
 }
+function applyWeaponSlots(){
+  const ids={slow:'slowPower',freeze:'freezePower',double:'doublePower',heart:'heartPower',surge:'surgePower'};
+  const saved=Array.isArray(save.weaponSlots)?save.weaponSlots:defaults.weaponSlots;
+  const selected=new Set(saved.filter(id=>Object.prototype.hasOwnProperty.call(ids,id)).slice(0,3));
+  Object.entries(ids).forEach(([weapon,buttonId])=>{
+    const button=$(buttonId);
+    if(button){button.hidden=!selected.has(weapon);button.setAttribute('aria-hidden',String(button.hidden));}
+  });
+}
 function updateUI(){
   updateHUD();
   setText('gems',save.gems);setText('bestScore',save.bestScore);setText('gamesPlayed',save.gamesPlayed);
@@ -1285,8 +1592,13 @@ function updateUI(){
   setText('headerPlayerName',save.playerName);renderPlayerAvatar('headerAvatar');setText('headerLevel',save.level);
   for(const id of ['slow','freeze','double','heart','surge'])setText(id+'Count','×'+(save.owned[id]||0));
   $('pauseBtn').disabled=!running||isOnlineRound;
-  setText('startBtn',running?(paused?'▶ Resume':'▶ Playing…'):'▶ Start Game');
-  $('startBtn').disabled=(running&&!paused)||(onlineMatch&&!onlineMatch.ended);
+  $('pauseBtn').title=isOnlineRound?'Online matches are synchronized; pause is available in solo mode only.':'Pause or resume your solo round';
+  const activeOnlineMatch=!!(onlineMatch&&!onlineMatch.ended);
+  setText('startBtn',running?(isOnlineRound?'■ Forfeit Match':'■ Stop Game'):activeOnlineMatch?'■ Leave Match':'▶ Start Game');
+  $('startBtn').disabled=false;
+  $('startBtn').title=running?(isOnlineRound?'Forfeit and leave the current online match':'Stop the current round'):activeOnlineMatch?'Leave the current online match':'Start a new round';
+  setText('restartBtn',activeOnlineMatch?'↻ Leave & Find Another':'↻ New Round');
+  $('restartBtn').title=activeOnlineMatch?'Leave this match and return to online matchmaking':'Restart the solo round';
   $('soundBtn').innerHTML=`<span class="sound-icon" aria-hidden="true">${save.muted?'🔇':'🔊'}</span><span class="sound-label">${save.muted?'Muted':'Sound'}</span>`;
   $('soundBtn').setAttribute('aria-pressed',String(save.muted));
   $('soundBtn').title=save.muted?'Unmute all audio':'Mute all audio';
@@ -1294,6 +1606,9 @@ function updateUI(){
   if(document.body.dataset.theme!==save.theme)document.body.dataset.theme=save.theme;
   applyGraphicsQuality();
   applyWorldMap();
+  // Re-apply saved slot selection on every UI refresh and initial load.
+  // An empty array is intentional and must hide all five default power-ups.
+  applyWeaponSlots();
 }
 function applyGraphicsQuality(){
   document.body.dataset.graphics=save.graphicsQuality==='low'?'low':'high';
@@ -1397,21 +1712,28 @@ function startGame(fromOnline=false){
   if(running){if(paused)resumeGame();return}
   gameToken++;clearTimers();hideMole();
   isOnlineRound=fromOnline;
-  score=0;earned=0;lives=3;combo=1;comboHits=0;lastHit=0;timeLeft=30;running=true;paused=false;roundStartedAt=Date.now();speedStage=0;scoreBoostHits=0;
+  currentRoundMode=fromOnline?'classic':(save.gameMode||'classic');
+  score=0;earned=0;lives=3;combo=1;comboHits=0;lastHit=0;
+  timeLeft=currentRoundMode==='timeattack'?45:currentRoundMode==='challenge'?45:currentRoundMode==='endless'?0:30;
+  running=true;paused=false;roundStartedAt=Date.now();speedStage=0;scoreBoostHits=0;
   slowUntil=0;freezeUntil=0;doubleActive=false;goldenHits=0;lastHole=null;
-  if(!fromOnline&&save.owned.time>0){timeLeft+=5;save.owned.time--}
+  /* The +5-second booster has no effect in Endless mode, so preserve it there. */
+  if(!fromOnline&&currentRoundMode!=='endless'&&save.owned.time>0){timeLeft+=5;save.owned.time--}
   if(!fromOnline&&save.owned.golden>0){goldenHits=5;save.owned.golden--}
   writeSave();
-  $('gameStatus').textContent='IN PROGRESS';setOverlay('Game on!','Whack regular and golden moles. Avoid bombs!','',false);
+  $('gameStatus').textContent='IN PROGRESS';
+  const modeStartText={classic:'Classic Run: score as much as possible in 30 seconds.',timeattack:'Time Attack: race the clock for 45 seconds and chase bonus moles.',endless:'Endless Run: no timer. Keep going until all three lives are gone.',challenge:'500-Point Challenge: hit the target before 45 seconds run out.'};
+  setOverlay('Game on!',modeStartText[currentRoundMode]+' Avoid bombs to protect your lives!','',false);
   updateUI();renderShop();beep(700,.12);spawnMole();tickTimer=setInterval(tick,1000);
 }
 function tick(){
   if(!running||paused)return;
   if(Date.now()<freezeUntil)return;
   const previousStage=speedStage;
-  timeLeft--;updateHUD();
+  if(currentRoundMode!=='endless')timeLeft--;
+  updateHUD();
   if(speedStage>previousStage)showToast('⚡ Speed increased! x'+getSpeedMultiplier().toFixed(2));
-  if(timeLeft<=0||lives<=0)endGame();
+  if((currentRoundMode!=='endless'&&timeLeft<=0)||lives<=0)endGame(false);
 }
 function spawnMole(){
   if(!running||paused)return;
@@ -1420,16 +1742,18 @@ function spawnMole(){
   lastHole=hole;
   const mole=hole._m,r=Math.random();let kind='normal';
   const activeMap=worldMaps.find(m=>m.id===save.mapId)||worldMaps[0];
-  if(r<.11){kind='bomb';hole._eyes.textContent='💣';hole._snout.textContent='⚠️'}
-  else if(r<.24){kind='golden';hole._eyes.textContent='✨';hole._snout.textContent=save.skin}
+  if(r<.10){kind='bomb';hole._eyes.textContent='💣';hole._snout.textContent='⚠️'}
+  else if(r<.22){kind='golden';hole._eyes.textContent='✨';hole._snout.textContent=save.skin}
+  else if(r<.30){kind='speedy';hole._eyes.textContent='💨';hole._snout.textContent='🦊'}
+  else if(r<.38){kind='tricky';hole._eyes.textContent='🌀';hole._snout.textContent='🦎'}
   else{hole._eyes.textContent='👀';hole._snout.textContent=activeMap.mob||save.skin}
   mole.dataset.kind=kind;
-  mole.className='mole'+(kind==='bomb'?' bomb':kind==='golden'?' golden':' map-'+activeMap.id)+' up';
-  mole.setAttribute('aria-label',activeMap.mobName||'Mole');
+  mole.className='mole'+(kind==='bomb'?' bomb':kind==='golden'?' golden':kind==='speedy'?' speedy':kind==='tricky'?' tricky':' map-'+activeMap.id)+' up';
+  mole.setAttribute('aria-label',kind==='tricky'?'Tricky Mole':kind==='golden'?'Golden Mole':kind==='speedy'?'Speedy Mole':kind==='bomb'?'Bomb Mole':(activeMap.mobName||'Mole'));
   currentHole=hole;
   const base=isOnlineRound?950:save.difficulty==='easy'?1300:save.difficulty==='hard'?850:950;
   /* Automatic ramp: every 6 seconds, moles appear faster and stay up for less time. */
-  const duration=(Date.now()<slowUntil?base*1.8:base)/getSpeedMultiplier();
+  const duration=(Date.now()<slowUntil?base*1.8:base)*(kind==='speedy'?.62:kind==='tricky'?.78:1)/getSpeedMultiplier();
   spawnTimer=setTimeout(()=>{
     if(currentHole===hole)hideMole();
     if(running&&!paused)spawnTimer=setTimeout(spawnMole,Math.max(35,110/getSpeedMultiplier()));
@@ -1458,6 +1782,7 @@ function hitMole(hole){
   if(!running||paused)return;
   const mole=hole._m;if(!mole.classList.contains('up'))return;
   const kind=mole.dataset.kind;
+  if(navigator.vibrate&&window.matchMedia&&window.matchMedia('(pointer: coarse)').matches){try{navigator.vibrate(kind==='bomb'?45:12)}catch(e){}}
   mole.classList.remove('up');if(currentHole===hole)currentHole=null;
   hole.classList.add('hit');safeTimeout(()=>hole.classList.remove('hit'),200);
   if(kind==='bomb'){
@@ -1468,16 +1793,17 @@ function hitMole(hole){
     queueNextMole();return;
   }
   const now=Date.now();comboHits=now-lastHit<1600?comboHits+1:1;lastHit=now;combo=Math.min(5,1+Math.floor((comboHits-1)/3));
-  const points=(kind==='golden'?25:10)*combo*(scoreBoostHits>0?2:1);if(scoreBoostHits>0)scoreBoostHits--;score+=points;spawnHitFX(hole,'+'+points+(combo>=3?'  COMBO!':''),kind);save.totalHits++;save.stats.totalScore+=points;
-  let coinsEarned=(kind==='golden'?25:10)*(doubleActive?2:1);
+  const points=(kind==='golden'?25:kind==='speedy'?20:kind==='tricky'?30:10)*combo*(scoreBoostHits>0?2:1);if(scoreBoostHits>0)scoreBoostHits--;score+=points;spawnHitFX(hole,'+'+points+(combo>=3?'  COMBO!':''),kind);save.totalHits++;save.stats.totalScore+=points;save.stats.bestCombo=Math.max(Number(save.stats.bestCombo||1),combo);if(kind!=='normal'){save.stats.specialHits=(save.stats.specialHits||0)+1;addMissionProgress('special',1)}addMissionProgress('hits',1);
+  let coinsEarned=(kind==='golden'?25:kind==='speedy'?15:10)*(doubleActive?2:1);
   if(goldenHits>0){coinsEarned+=10;goldenHits--}
   if(!isOnlineRound&&save.difficulty==='easy')coinsEarned=Math.max(1,Math.round(coinsEarned*.8));
-  earned+=coinsEarned;save.coins+=coinsEarned;save.stats.totalCoins+=coinsEarned;
+  earned+=coinsEarned;save.coins+=coinsEarned;save.stats.totalCoins+=coinsEarned;addMissionProgress('coins',coinsEarned);
   gainXP(points);beep(kind==='golden'?950:650,.06);
   updateHUD();checkAchievements();
   if(isOnlineRound&&onlineMatch&&onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){
     onlineSocket.send(JSON.stringify({type:'score',matchId:onlineMatch.id,score}));
   }
+  if(currentRoundMode==='challenge'&&score>=500){endGame(true);return}
   queueNextMole();
 }
 function gainXP(amount){
@@ -1499,10 +1825,10 @@ function resumeGame(){
   paused=false;$('gameStatus').textContent='IN PROGRESS';setOverlay('','','',false);
   spawnMole();updateUI();
 }
-function endGame(){
+function endGame(challengeWon=false){
   if(!running)return;
   running=false;paused=false;clearTimers();hideMole();
-  save.gamesPlayed++;save.bestScore=Math.max(save.bestScore,score);writeSave();
+  save.gamesPlayed++;save.bestScore=Math.max(save.bestScore,score);if(!isOnlineRound){save.modeRecords[currentRoundMode]=Math.max(Number(save.modeRecords[currentRoundMode]||0),score);addMissionProgress('games',1);}writeSave();
   checkAchievements();updateUI();$('gameStatus').textContent='ROUND COMPLETE';beep(350,.18);
   if(isOnlineRound&&onlineMatch){
     if(onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){
@@ -1511,45 +1837,92 @@ function endGame(){
     setOverlay('Score submitted!',`You scored ${score}. Waiting for your opponent to finish…`,'',true);
     return;
   }
-  setOverlay('Round complete!',`Score: ${score} · Coins earned: ${earned} · Best score: ${save.bestScore}`,'↻ PLAY AGAIN');confetti();
+  if(currentRoundMode==='challenge'&&challengeWon){setOverlay('🏆 Challenge Cleared!',`Target smashed! You scored ${score} points and collected ${earned} coins.`,'↻ RUN IT BACK');confetti();}
+  else if(currentRoundMode==='endless'){setOverlay('Endless run over!',`You survived with ${score} points and earned ${earned} coins. Best score: ${save.bestScore}`,'↻ RUN IT BACK');}
+  else if(currentRoundMode==='challenge'){setOverlay('Time Is Up!',`You scored ${score}/500 points and earned ${earned} coins. One more run can do it!`,'↻ TRY AGAIN');}
+  else{setOverlay('Round complete!',`${currentRoundMode==='timeattack'?'Time Attack · ':''}Score: ${score} · Coins earned: ${earned} · Best score: ${save.bestScore}`,'↻ RUN IT BACK');}
+  confetti();
 }
 function abortGame(){
-  gameToken++;clearTimers();hideMole();running=false;paused=false;isOnlineRound=false;
+  if(isOnlineRound){forfeitOnlineMatch();return}
+  gameToken++;clearTimers();hideMole();running=false;paused=false;isOnlineRound=false;currentRoundMode=save.gameMode||'classic';
   $('gameStatus').textContent='READY TO PLAY';
-  setOverlay('Ready, Hunter?','Whack the moles, build combos, and collect coins to upgrade your gear.','▶ START GAME');
+  writeSave();setOverlay('Round stopped','Your saved coins, upgrades, and settings are safe. Start again whenever you are ready.','▶ START GAME');
+  updateUI();
 }
+function forfeitOnlineMatch(){
+  if(!onlineMatch||onlineMatch.ended){showToast('There is no active online match to leave.');return}
+  const matchId=onlineMatch.id;
+  // The existing server protocol handles a leave/forfeit through the "leave" message.
+  sendOnlineMessage({type:'leave',matchId});
+  gameToken++;clearTimers();hideMole();running=false;paused=false;isOnlineRound=false;
+  clearTimeout(onlineGameStartTimer);onlineGameStartTimer=null;
+  onlineQueued=false;onlineMatch=null;
+  $('gameStatus').textContent='MATCH LEFT';
+  setOverlay('Match left','You left the online match. Your saved progress remains on this device.','▶ PLAY SOLO');
+  setOnlineStatus('You left the online match. Find another player when ready.');
+  updateOnlineMatchBanner();updateOnlineControls();updateUI();
+}
+function findShopItem(id){return shopItems.find(x=>x.id===id)||(save.customItems||[]).find(x=>x.id===id)||null}
 function buyItem(id){
-  const item=shopItems.find(x=>x.id===id);if(!item)return;
-  if(save.coins<item.price){showToast('Not enough coins! Whack more moles.');beep(180);return}
-  save.coins-=item.price;save.owned[id]=(save.owned[id]||0)+1;writeSave();updateUI();renderShop();beep(800,.08);showToast(`${item.icon} ${item.name} purchased!`);
+  const item=findShopItem(id);if(!item)return;
+  const price=Math.max(0,Math.min(5000,Math.round(Number(item.price)||0)));
+  if(save.coins<price){showToast('Not enough coins! Whack more moles.');beep(180);return}
+  save.coins-=price;save.owned[id]=(save.owned[id]||0)+1;writeSave();updateUI();renderShop();beep(800,.08);showToast(`${item.icon} ${item.name} purchased!`);
+}
+function renderCustomPowerButtons(){
+  const wrap=$('customPowerups');if(!wrap)return;wrap.innerHTML='';
+  const slots=Array.isArray(save.weaponSlots)?save.weaponSlots:defaults.weaponSlots;
+  (save.customItems||[]).forEach(item=>{
+    if(!slots.includes(item.id))return;
+    const count=Number(save.owned[item.id])||0;if(count<=0)return;
+    const button=document.createElement('button');button.type='button';button.className='subtle';button.title=item.desc||item.name;
+    const label=document.createElement('span');label.textContent=`${item.icon||'✨'} ${item.name}`;
+    const amount=document.createElement('span');amount.className='muted';amount.textContent=String(count);
+    button.append(label,amount);button.addEventListener('click',()=>usePower(item.id));wrap.appendChild(button);
+  });
+  wrap.style.display=wrap.children.length?'grid':'none';
 }
 function renderShop(){
   ['shopList','shopModalList'].forEach(listId=>{
     const list=$(listId);if(!list)return;
     const frag=document.createDocumentFragment();
-    shopItems.forEach(item=>{
+    [...shopItems,...(save.customItems||[])].forEach(item=>{
       const card=document.createElement('div');card.className='shop-item';
-      card.innerHTML=`<div class="shop-icon">${item.icon}</div><div><h4>${item.name}</h4><p>${item.desc}</p><div class="shop-foot"><span class="price">🪙 ${item.price}</span><button type="button" class="buy-btn mint">Buy</button></div><div class="muted small">Owned: ${save.owned[item.id]||0}</div></div>`;
-      card.querySelector('button').addEventListener('click',()=>buyItem(item.id));frag.appendChild(card);
+      const icon=document.createElement('div');icon.className='shop-icon';icon.textContent=item.icon||'✨';
+      const body=document.createElement('div');
+      const title=document.createElement('h4');title.textContent=item.name;
+      const desc=document.createElement('p');desc.textContent=item.desc||'Custom power-up.';
+      const foot=document.createElement('div');foot.className='shop-foot';
+      const price=document.createElement('span');price.className='price';price.textContent=`🪙 ${Number(item.price)||0}`;
+      const buy=document.createElement('button');buy.type='button';buy.className='buy-btn mint';buy.textContent='Buy';buy.addEventListener('click',()=>buyItem(item.id));
+      foot.append(price,buy);body.append(title,desc,foot);
+      const owned=document.createElement('div');owned.className='muted small';owned.textContent=`Owned: ${save.owned[item.id]||0}`;body.append(owned);
+      if((save.customItems||[]).some(x=>x.id===item.id)){
+        const use=document.createElement('button');use.type='button';use.className='subtle';use.style.marginTop='7px';use.style.width='100%';use.textContent='Use during a round';use.disabled=!(save.owned[item.id]>0);use.addEventListener('click',()=>usePower(item.id));body.append(use);
+      }
+      card.append(icon,body);frag.appendChild(card);
     });
     list.innerHTML='';list.appendChild(frag);
   });
+  renderCustomPowerButtons();
 }
 function usePower(id){
   if(isOnlineRound){showToast('Power-ups are disabled in fair online matches.');return}
   if(!running||paused){showToast('Start a game to use power-ups.');return}
+  const item=findShopItem(id);const effect=item&&item.effect?item.effect:id;
   if(!save.owned[id]){showToast('Buy this power-up in the shop first.');return}
-  if(id==='double'&&doubleActive){showToast('🪙 Double Coins already active this round.');return}
-  if(id==='slow'&&Date.now()<slowUntil){showToast('❄️ Slow-Mo already active.');return}
-  if(id==='freeze'&&Date.now()<freezeUntil){showToast('🧊 Time is already frozen.');return}
-  if(id==='heart'&&lives>=3){showToast('❤️ You already have full lives.');return}
-  if(id==='surge'&&scoreBoostHits>0){showToast('🚀 Score Surge is already active.');return}
+  if(effect==='double'&&doubleActive){showToast('🪙 Double Coins already active this round.');return}
+  if(effect==='slow'&&Date.now()<slowUntil){showToast('❄️ Slow Time already active.');return}
+  if(effect==='freeze'&&Date.now()<freezeUntil){showToast('🧊 Time is already frozen.');return}
+  if(effect==='heart'&&lives>=3){showToast('❤️ You already have full lives.');return}
+  if(effect==='surge'&&scoreBoostHits>0){showToast('🚀 Score Boost is already active.');return}
   save.owned[id]--;writeSave();
-  if(id==='slow'){slowUntil=Date.now()+10000;showToast('❄️ Slow-Mo active for 10 seconds!')}
-  if(id==='freeze'){freezeUntil=Date.now()+5000;showToast('🧊 Time frozen for 5 seconds!')}
-  if(id==='double'){doubleActive=true;showToast('🪙 Double coins active for this round!')}
-  if(id==='heart'){lives=Math.min(3,lives+1);showToast('❤️ Extra life restored!')}
-  if(id==='surge'){scoreBoostHits=5;showToast('🚀 Double points for your next 5 hits!')}
+  if(effect==='slow'){slowUntil=Date.now()+10000;showToast(`${item.icon||'❄️'} Slow Time active for 10 seconds!`)}
+  if(effect==='freeze'){freezeUntil=Date.now()+5000;showToast(`${item.icon||'🧊'} Time frozen for 5 seconds!`)}
+  if(effect==='double'){doubleActive=true;showToast(`${item.icon||'🪙'} Double coins active for this round!`)}
+  if(effect==='heart'){lives=Math.min(3,lives+1);showToast(`${item.icon||'❤️'} Extra life restored!`)}
+  if(effect==='surge'){scoreBoostHits=5;showToast(`${item.icon||'🚀'} Double points for your next 5 hits!`)}
   updateUI();renderShop();beep(900,.1);
 }
 function checkAchievements(){
@@ -1580,7 +1953,11 @@ function yesterdayStr(date=new Date()){
   return todayStr(yesterday);
 }
 function resetMissedDailyStreak(currentDate=todayStr()){
-  if(save.dailyDate && save.dailyDate!==currentDate && save.dailyDate!==yesterdayStr() && Number(save.dailyStreak)!==0){
+  const claimedAt=Number(save.dailyClaimAt)||0;
+  const elapsed=claimedAt?Date.now()-claimedAt:Infinity;
+  // Rewards unlock every 24 hours; allow a 48-hour grace window for keeping the streak.
+  // Calendar-date comparisons incorrectly reset streaks for claims made late at night.
+  if((!claimedAt || elapsed>48*60*60*1000) && Number(save.dailyStreak)!==0){
     save.dailyStreak=0;
     persist();
   }
@@ -1616,6 +1993,20 @@ function updateDailyCountdown(){
     if(backdrop && !backdrop.classList.contains('hidden') && title && title.textContent.includes('7-Day Daily Rewards')) openModal('daily');
   }
 }
+ensureDailyMissions();
+/* Hidden 12-hour mission-cycle checker. Expiry is caught while active and immediately on return from background. */
+let lastMissionResetAt=Number(save.dailyMissions&&save.dailyMissions.resetAt)||0;
+function checkDailyMissionCycle(){
+  const state=ensureDailyMissions();
+  const after=Number(state.resetAt)||0;
+  if(lastMissionResetAt!==after){
+    lastMissionResetAt=after;
+    writeSave();
+    const backdrop=$('modalBackdrop'),title=$('modalTitle');
+    if(backdrop&&!backdrop.classList.contains('hidden')&&title&&title.textContent.includes('Daily Missions'))openModal('missions');
+  }
+}
+setInterval(checkDailyMissionCycle,15000);
 updateDailyCountdown();
 function startDailyCountdown(){
   updateDailyCountdown();
@@ -1655,13 +2046,14 @@ function applyWorldMap(){
   if(save.music&&musicTimer&&musicMapId!==map.id)startMusic();
 }
 const ONLINE_URL_KEY='moleMashOnlineServerUrlV1';
+const ONLINE_LEADERBOARD_CACHE_KEY='moleMashOnlineLeaderboardV1';
 function defaultOnlineServerUrl(){
   return 'wss://mole-mash-online.onrender.com/ws';
 }
 function onlineServerUrl(){
   try{
     const savedUrl=localStorage.getItem(ONLINE_URL_KEY);
-    if(savedUrl==='ws://192.168.1.8:8080/ws'){
+    if(savedUrl==='ws://192.168.1.8:8080/ws'||(savedUrl&&savedUrl.includes('molemash.mywebsitee.online'))){
       const serverUrl=defaultOnlineServerUrl();
       localStorage.setItem(ONLINE_URL_KEY,serverUrl);
       return serverUrl;
@@ -1669,6 +2061,22 @@ function onlineServerUrl(){
     return savedUrl||defaultOnlineServerUrl();
   }
   catch(error){console.error('Could not read online server URL:',error);return defaultOnlineServerUrl()}
+}
+function parseOnlineWebSocketUrl(endpoint,pageProtocol=location.protocol){
+  let value=String(endpoint||'').trim();
+  if(!value)throw new Error('Enter your server address, such as mole-mash-online.onrender.com.');
+  if(!/^[a-z][a-z\d+.-]*:\/\//i.test(value)){
+    value=`${pageProtocol==='https:'?'https:':'http:'}//${value}`;
+  }
+  let url;
+  try{url=new URL(value)}
+  catch(error){throw new Error('Enter a valid server address, such as mole-mash-online.onrender.com.')}
+  if(url.protocol==='http:')url.protocol='ws:';
+  else if(url.protocol==='https:')url.protocol='wss:';
+  if(!['ws:','wss:'].includes(url.protocol))throw new Error('Enter an http(s) or ws(s) server address.');
+  if(pageProtocol==='https:'&&url.protocol==='ws:')url.protocol='wss:';
+  if(url.pathname==='/')url.pathname='/ws';
+  return url;
 }
 function sendOnlineMessage(message){
   if(onlineSocket&&onlineSocket.readyState===WebSocket.OPEN)onlineSocket.send(JSON.stringify(message));
@@ -1678,8 +2086,43 @@ function setOnlineStatus(message){
   const status=$('onlineStatus');
   if(status)status.textContent=message;
 }
+function normalizeOnlineLeaderboard(rows){
+  if(!Array.isArray(rows))return [];
+  const players=new Map();
+  rows.forEach(row=>{
+    if(!row||typeof row.name!=='string')return;
+    const name=row.name.trim().replace(/\s+/g,' ').slice(0,20);
+    const bestScore=Number.isSafeInteger(row.bestScore)?row.bestScore:row.score;
+    if(!name||!Number.isSafeInteger(bestScore)||bestScore<0||bestScore>100000)return;
+    const key=name.toLocaleLowerCase('en-US');
+    const matchesPlayed=Number.isSafeInteger(row.matchesPlayed)&&row.matchesPlayed>=0?row.matchesPlayed:0;
+    const wins=Number.isSafeInteger(row.wins)&&row.wins>=0?row.wins:0;
+    const totalScore=Number.isSafeInteger(row.totalScore)&&row.totalScore>=0?row.totalScore:0;
+    const previous=players.get(key);
+    players.set(key,{
+      name:!previous||bestScore>previous.bestScore?name:previous.name,
+      emoji:typeof row.emoji==='string'&&row.emoji?row.emoji:previous?previous.emoji:'🐹',
+      bestScore:Math.max(previous?previous.bestScore:0,bestScore),
+      matchesPlayed:Math.max(previous?previous.matchesPlayed:0,matchesPlayed),
+      wins:Math.max(previous?previous.wins:0,wins),
+      totalScore:Math.max(previous?previous.totalScore:0,totalScore)
+    });
+  });
+  return [...players.values()].sort((a,b)=>b.bestScore-a.bestScore||a.name.localeCompare(b.name));
+}
+function readCachedOnlineLeaderboard(){
+  try{
+    const cached=localStorage.getItem(ONLINE_LEADERBOARD_CACHE_KEY);
+    return cached?normalizeOnlineLeaderboard(JSON.parse(cached)):[];
+  }catch(error){console.error('Could not read cached online leaderboard:',error);return []}
+}
+function mergeOnlineLeaderboards(rows,cachedRows){
+  return normalizeOnlineLeaderboard([...normalizeOnlineLeaderboard(rows),...normalizeOnlineLeaderboard(cachedRows)]);
+}
 function renderOnlineLeaderboard(rows){
-  onlineLeaderboardRows=Array.isArray(rows)?rows:[];
+  onlineLeaderboardRows=mergeOnlineLeaderboards(rows,readCachedOnlineLeaderboard());
+  try{localStorage.setItem(ONLINE_LEADERBOARD_CACHE_KEY,JSON.stringify(onlineLeaderboardRows))}
+  catch(error){console.error('Could not cache online leaderboard:',error)}
   const list=$('onlineLeaderboard');
   if(!list)return;
   list.textContent='';
@@ -1697,9 +2140,42 @@ function renderOnlineLeaderboard(rows){
     player.className='leaderboard-player';
     emoji.className='leaderboard-emoji';emoji.setAttribute('aria-hidden','true');emoji.textContent=row.emoji||'🐹';
     name.className='leaderboard-name';name.textContent=row.name;
-    score.className='leaderboard-score';points.textContent=String(row.bestScore);unit.textContent='points';
+    score.className='leaderboard-score';points.textContent=String(row.bestScore);
+    unit.textContent=row.matchesPlayed
+      ?`${row.wins} wins · ${row.matchesPlayed} games`
+      :'all-time best';
     player.append(emoji,name);score.append(points,unit);item.append(place,player,score);list.appendChild(item);
   });
+}
+async function refreshOnlineLeaderboard(){
+  const input=$('onlineServerUrl');
+  let url;
+  try{
+    url=new URL(input?input.value.trim():onlineServerUrl());
+    if(!['ws:','wss:'].includes(url.protocol))throw new Error('Use a ws:// or wss:// server address.');
+    url.protocol=url.protocol==='wss:'?'https:':'http:';
+    url.pathname='/leaderboard';url.search='';url.hash='';
+  }catch(error){
+    console.error('Invalid online leaderboard server URL:',error);
+    return;
+  }
+  try{
+    const response=await fetch(url.href,{headers:{Accept:'application/json'},cache:'no-store'});
+    if(!response.ok)throw new Error(`Leaderboard request failed (${response.status}).`);
+    const rows=await response.json();
+    if(!Array.isArray(rows))throw new Error('The server returned an invalid leaderboard.');
+    renderOnlineLeaderboard(rows);
+    if(!onlineSocket||onlineSocket.readyState!==WebSocket.OPEN){
+      setOnlineStatus('Global leaderboard loaded. Multiplayer connection is not required.');
+    }
+  }catch(error){
+    console.error('Could not refresh online leaderboard:',error);
+    if(!onlineSocket||onlineSocket.readyState!==WebSocket.OPEN){
+      setOnlineStatus(onlineLeaderboardRows.length
+        ?'Offline — showing saved global scores.'
+        :'Could not load global scores. Saved scores will appear when available.');
+    }
+  }
 }
 function updateOnlineMatchBanner(){
   const banner=$('onlineMatchBanner');
@@ -1755,9 +2231,7 @@ function connectOnline(){
   if(!name){setOnlineStatus('Enter a player name first.');return}
   let url;
   try{
-    url=new URL(endpoint);
-    if(!['ws:','wss:'].includes(url.protocol))throw new Error('Use a ws:// or wss:// server address.');
-    if(url.pathname==='/')url.pathname='/ws';
+    url=parseOnlineWebSocketUrl(endpoint);
   }catch(error){setOnlineStatus(error.message||'Enter a valid WebSocket server address.');return}
   try{localStorage.setItem(ONLINE_URL_KEY,url.href)}catch(error){console.error('Could not save online server URL:',error)}
   save.onlineName=name;writeSave();
@@ -1782,7 +2256,14 @@ function connectOnline(){
   socket.addEventListener('close',()=>{
   if(onlineSocket!==socket)return;
   onlineSocket=null;
+  const wasPlayingOnline=running&&isOnlineRound;
   clearOnlineMatchState({keepOverlay:false});
+  if(wasPlayingOnline){
+    gameToken++;clearTimers();hideMole();running=false;paused=false;isOnlineRound=false;
+    $('gameStatus').textContent='CONNECTION LOST';
+    setOverlay('Connection lost','Your online match disconnected. Your saved local progress is preserved. Reconnect from the Online menu.','▶ PLAY SOLO');
+    updateUI();
+  }
   setOnlineStatus('Disconnected from the server.');
   });
   updateOnlineControls();
@@ -1858,7 +2339,7 @@ function handleOnlineMessage(message){
     const wasOnlineRound=isOnlineRound;
     onlineQueued=false;
     isOnlineRound=false;
-    if(running&&wasOnlineRound){running=false;clearTimers();hideMole();updateUI()}
+    if(running&&wasOnlineRound){gameToken++;running=false;paused=false;clearTimers();hideMole();updateUI()}
     const self=message.players.find(player=>player.id===previousMatch.selfId);
     const other=message.players.find(player=>player.id!==previousMatch.selfId);
     const outcome=message.winnerId===null?'It’s a tie!':message.winnerId===previousMatch.selfId?'You win!':'Opponent wins!';
@@ -1889,7 +2370,7 @@ function openModal(name){
   if(name==='world'){
     $('modalTitle').textContent='🗺️ WORLD ATLAS';
     let previewWorldId=save.mapId;
-    add(`<p class="world-select-intro">Choose your next arena. Select a destination to preview its atmosphere, relic, and soundtrack.</p>
+    add(`<p class="world-select-intro">Choose your next arena. Preview its look, collectible, and world details.</p>
       <div class="world-select-summary"><strong>DISCOVERED WORLDS</strong><span class="pill" id="worldCount"></span></div>
       <div class="world-progress"><span id="worldProgressFill"></span></div>
       <section id="worldFeature" class="world-select-hero" aria-live="polite"></section>
@@ -1912,7 +2393,7 @@ function openModal(name){
         <h3>${preview.name}</h3><p>${preview.desc}</p>
         <div class="world-select-feature-row">
           <span class="world-select-item"><span class="world-select-item-icon" aria-hidden="true">${preview.item}</span><span class="world-select-item-copy"><strong>${preview.itemName}</strong><small>${preview.itemDesc}</small></span></span>
-          <span class="world-select-music">♫ ORIGINAL SOUNDTRACK</span>
+          <span class="world-select-music">♫ OPTIONAL MUSIC</span>
         </div>
         <button type="button" class="primary world-select-action" id="worldTravel" ${isCurrent?'disabled':''}>${isCurrent?'✓ CURRENT WORLD':isUnlocked?'✦ TRAVEL TO WORLD':`🔓 UNLOCK · ${preview.cost.toLocaleString()} COINS`}</button>`;
       $('worldTravel').onclick=()=>{
@@ -1946,15 +2427,15 @@ function openModal(name){
     $('modalTitle').textContent='⚙️ Settings';
     add(`<div class="setting-row"><label for="nameInput">Player name</label><input id="nameInput" type="text" maxlength="20" value="${escapeHTML(save.playerName)}"><button type="button" class="mint" id="savePlayerName">Save name</button></div>
     <div class="setting-row" style="align-items:center"><label for="avatarUpload">Custom profile image</label><input id="avatarUpload" type="file" accept="image/*" style="max-width:210px"><button type="button" id="removeAvatarImage" ${save.avatarImage?'':'disabled'}>Remove image</button></div><p class="muted small" style="margin:0 0 10px">Choose a photo from your device. It is resized and saved on this device.</p>
-    <div class="setting-row"><span>Mute all audio</span><button type="button" id="modalMute" aria-pressed="${save.muted}">${save.muted?'🔇 Muted':'🔊 On'}</button></div>
-    <div class="setting-row"><span>Sound effects</span><button type="button" id="modalSound" aria-pressed="${save.sound}">${save.sound?'🔊 On':'🔇 Off'}</button></div>
+    <div class="setting-row"><span>Mute all game audio</span><button type="button" id="modalMute" aria-pressed="${save.muted}">${save.muted?'🔇 Muted':'🔊 On'}</button></div>
+    <div class="setting-row"><span>Gameplay sound effects</span><button type="button" id="modalSound" aria-pressed="${save.sound}">${save.sound?'🔊 On':'🔇 Off'}</button></div>
     <div class="setting-row"><label for="sfxVolume">Effects volume</label><input id="sfxVolume" type="range" min="0" max="100" value="${save.sfxVolume??65}"><output id="sfxVolumeValue">${save.sfxVolume??65}%</output></div>
-    <div class="setting-row"><span>Background music</span><button type="button" id="modalMusic" aria-pressed="${save.music}">${save.music?'🎵 On':'🎵 Off'}</button></div>
+    <div class="setting-row"><span>Background music (optional)</span><button type="button" id="modalMusic" aria-pressed="${save.music}">${save.music?'🎵 On':'🎵 Off'}</button></div>
     <div class="setting-row"><label for="musicVolume">Music volume</label><input id="musicVolume" type="range" min="0" max="100" value="${save.musicVolume??80}"><output id="musicVolumeValue">${save.musicVolume??80}%</output></div>
     <div class="setting-row graphics-quality-row"><label for="graphicsQuality">Graphics quality</label><select id="graphicsQuality"><option value="low">Low</option><option value="high">High</option></select></div>
-    <p class="muted graphics-quality-help">High adds illustrated meadow and mole artwork, glow, and hit sparks. Low simplifies effects for smoother performance.</p>
+    <p class="muted graphics-quality-help">High keeps detailed artwork with mobile GPU optimizations. Low removes extra effects for maximum smoothness.</p>
     <div class="setting-row graphics-quality-row"><label for="graphicsScale">Graphics scale</label><select id="graphicsScale"><option value="75">75%</option><option value="100">100%</option><option value="125">125%</option></select></div>
-    <p class="muted graphics-quality-help">Scales mole artwork in every hole. Choose a smaller scale for a cleaner board or a larger scale for bigger targets.</p>
+    <p class="muted graphics-quality-help">Adjust mole size on the board. Smaller targets keep the board tidy; larger targets are easier to tap.</p>
     <div class="setting-row"><span>Difficulty</span><select id="difficulty"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></div>
     <div class="setting-row"><span>Visual theme</span><select id="themeSelect"><option value="arcade">Arcade Night</option><option value="forest">Forest</option><option value="candy">Candy</option><option value="space">Space</option></select></div>
     <div class="setting-row"><span>Reset local progress</span><button type="button" class="danger" id="resetSave">Reset</button></div>`);
@@ -1998,13 +2479,58 @@ function openModal(name){
     };
   }else if(name==='shop'){
     $('modalTitle').textContent='🛍️ Item Shop';
-    add('<p class="muted small">Spend coins on power-ups for your next round.</p><div class="shop-list" id="shopModalList"></div>');
-    renderShop();
+    add('<p class="muted small">Buy the power-ups you want, then choose which ones appear in your active item slots.</p><div class="shop-list" id="shopModalList"></div><button type="button" class="mint" id="openWeaponSlots" style="width:100%;margin-top:12px">🎯 Select Items for Slots</button>');
+    renderShop();$('openWeaponSlots').onclick=()=>openModal('loadout');
+  }else if(name==='loadout'){
+    $('modalTitle').textContent='🎯 Select Items for Slots';
+    add('<p class="muted small">Tap an item to select it or tap again to unselect it. Choose up to 3 items. Every change saves automatically on this device.</p><div id="weaponSlotPicker" class="modal-grid"></div><div class="muted small" id="weaponSlotCount" style="margin-top:10px"></div>');
+    const weapons=[
+      {id:'slow',icon:'❄️',name:'Slow Time',desc:'Moles stay up longer.'},
+      {id:'freeze',icon:'🧊',name:'Time Freeze',desc:'Freeze the countdown for 5 seconds.'},
+      {id:'double',icon:'🪙',name:'Double Coins',desc:'Double coin rewards this round.'},
+      {id:'heart',icon:'❤️',name:'Bonus Life',desc:'Restore one lost life.'},
+      {id:'surge',icon:'🚀',name:'Score Boost',desc:'Double points for the next 5 hits.'}
+    ];
+    let selected=[...(save.weaponSlots||defaults.weaponSlots)].filter((id,i,a)=>weapons.some(w=>w.id===id)&&a.indexOf(id)===i).slice(0,3);
+    const picker=$('weaponSlotPicker');
+    const count=$('weaponSlotCount');
+    const paintSlots=()=>{
+      picker.innerHTML='';
+      weapons.forEach(w=>{
+        const card=document.createElement('div');card.className='option-card';
+        const equipped=selected.includes(w.id);
+        const title=document.createElement('h3');title.textContent=`${w.icon} ${w.name}`;
+        const desc=document.createElement('p');desc.textContent=w.desc;
+        const amount=document.createElement('p');amount.className='muted small';amount.textContent=`Owned: ${save.owned[w.id]||0}`;
+        const btn=document.createElement('button');btn.type='button';btn.className=equipped?'gold':'mint';btn.textContent=equipped?`Slot ${selected.indexOf(w.id)+1} · In Slot`:'Add to Slot';
+        btn.disabled=!equipped&&selected.length>=3;
+        btn.setAttribute('aria-pressed',String(equipped));
+        btn.onclick=()=>{
+          if(equipped){
+            selected=selected.filter(id=>id!==w.id);
+          }else if(selected.length<3){
+            selected.push(w.id);
+          }else{
+            showToast('You can equip up to 3 items. Unselect one first.');
+            return;
+          }
+          // Persist each select/unselect immediately, including an empty loadout.
+          save.weaponSlots=selected.slice(0,3);
+          writeSave();
+          applyWeaponSlots();
+          renderCustomPowerButtons();
+          paintSlots();
+        };
+        card.append(title,desc,amount,btn);picker.appendChild(card);
+      });
+      count.textContent=`✓ Auto-saved · ${selected.length}/3 items selected`;
+    };
+    paintSlots();
   }else if(name==='achievements'){
-    $('modalTitle').textContent='🏆 Achievements';add('<p class="muted small">Unlock milestones to earn bonus coins.</p>');
+    $('modalTitle').textContent='🏆 Achievements';add('<p class="muted small">Complete milestones to earn bonus coins.</p>');
     achievementDefs.forEach(a=>{const unlocked=save.achievements.includes(a.id);add(`<div class="achievement ${unlocked?'':'locked'}"><div class="badge-icon">${unlocked?a.icon:'🔒'}</div><div><b>${a.name}</b><small>${a.desc} Reward: ${a.reward} coins · ${unlocked?'UNLOCKED':'LOCKED'}</small></div></div>`)});
   }else if(name==='skins'){
-    $('modalTitle').textContent='🐹 Mole Collection';add('<p class="muted small">Choose your look. Unlock new characters with coins.</p><div class="modal-grid" id="skinGrid"></div>');const grid=$('skinGrid');
+    $('modalTitle').textContent='🐹 Mole Collection';add('<p class="muted small">Pick your favorite look. Unlock more characters with coins.</p><div class="modal-grid" id="skinGrid"></div>');const grid=$('skinGrid');
     skins.forEach(s=>{
       const owned=save.skins.includes(s.emoji),selected=save.skin===s.emoji;
       const card=document.createElement('div');card.className='option-card';
@@ -2019,14 +2545,18 @@ function openModal(name){
     $('modalTitle').textContent='📊 Player Statistics';
     const averageScore=save.gamesPlayed?Math.round(save.stats.totalScore/save.gamesPlayed):0;
     const currentRank=rankInfo(save.level).current;
-    add(`<p class="muted small" style="margin:0 0 12px">Lifetime progress and gameplay records for ${escapeHTML(save.playerName)}.</p>
+    add(`<p class="muted small" style="margin:0 0 12px">All-time progress and game records for ${escapeHTML(save.playerName)}.</p>
     <div class="modal-grid" aria-label="Player statistics">
-    <div class="option-card"><h3>${save.bestScore.toLocaleString()}</h3><p>🏆 Best round score</p></div><div class="option-card"><h3>${save.totalHits.toLocaleString()}</h3><p>🎯 Total mole hits</p></div>
-    <div class="option-card"><h3>${save.gamesPlayed.toLocaleString()}</h3><p>🎮 Games played</p></div><div class="option-card"><h3>${averageScore.toLocaleString()}</h3><p>📈 Average score</p></div>
-    <div class="option-card"><h3>${save.stats.totalScore.toLocaleString()}</h3><p>⭐ Lifetime score</p></div><div class="option-card"><h3>${save.stats.totalCoins.toLocaleString()}</h3><p>🪙 Coins earned from hits</p></div>
-    <div class="option-card"><h3>${save.stats.bombsHit.toLocaleString()}</h3><p>💣 Bombs hit</p></div><div class="option-card"><h3>Level ${save.level}</h3><p>${currentRank.icon} ${currentRank.name} rank</p></div>
-    <div class="option-card"><h3>${save.unlockedMaps.length} / ${worldMaps.length}</h3><p>🗺️ Worlds unlocked</p></div><div class="option-card"><h3>${save.skins.length} / ${skins.length}</h3><p>🎨 Mole skins owned</p></div>
-    <div class="option-card"><h3>${save.achievements.length} / ${achievementDefs.length}</h3><p>🏅 Achievements earned</p></div><div class="option-card"><h3>${save.dailyStreak||0}</h3><p>🔥 Current daily streak</p></div></div>`);
+    <div class="option-card"><h3>${save.bestScore.toLocaleString()}</h3><p>🏆 Best round</p></div><div class="option-card"><h3>${save.totalHits.toLocaleString()}</h3><p>🎯 Mole hits</p></div>
+    <div class="option-card"><h3>${save.gamesPlayed.toLocaleString()}</h3><p>🎮 Rounds played</p></div><div class="option-card"><h3>${averageScore.toLocaleString()}</h3><p>📈 Average round score</p></div>
+    <div class="option-card"><h3>${save.stats.totalScore.toLocaleString()}</h3><p>⭐ Total score</p></div><div class="option-card"><h3>${save.stats.totalCoins.toLocaleString()}</h3><p>🪙 Coins collected</p></div>
+    <div class="option-card"><h3>${save.stats.bombsHit.toLocaleString()}</h3><p>💣 Bombs triggered</p></div><div class="option-card"><h3>x${Number(save.stats.bestCombo||1)}</h3><p>🔥 Best combo</p></div><div class="option-card"><h3>Level ${save.level}</h3><p>${currentRank.icon} ${currentRank.name} rank</p></div>
+    <div class="option-card"><h3>${save.unlockedMaps.length} / ${worldMaps.length}</h3><p>🗺️ Arenas unlocked</p></div><div class="option-card"><h3>${save.skins.length} / ${skins.length}</h3><p>🎨 Styles owned</p></div>
+    <div class="option-card"><h3>${save.achievements.length} / ${achievementDefs.length}</h3><p>🏅 Trophies earned</p></div><div class="option-card"><h3>${save.dailyStreak||0}</h3><p>🔥 Daily streak</p></div></div><h3 style="margin-top:16px">🏁 Personal Bests by Mode</h3><div class="modal-grid">${[['classic','Classic'],['timeattack','Time Attack'],['endless','Endless'],['challenge','Challenge']].map(([id,label])=>`<div class="option-card"><h3>${Number(save.modeRecords[id]||0).toLocaleString()}</h3><p>${label}</p></div>`).join('')}</div><p class="muted small">These personal records are saved on this device. A global leaderboard requires an online server.</p>`);
+  }else if(name==='missions'){
+    $('modalTitle').textContent='📋 Daily Missions';
+    add(renderDailyMissions());
+    content.querySelectorAll('[data-claim-mission]').forEach(button=>button.addEventListener('click',()=>claimDailyMission(button.dataset.claimMission)));
   }else if(name==='daily'){
     $('modalTitle').textContent='🎁 7-Day Daily Rewards';
     const today=todayStr();
@@ -2035,7 +2565,9 @@ function openModal(name){
     const claimTime=Number(save.dailyClaimAt)||0;
     const claimed=!!claimTime && (Date.now()-claimTime)<24*60*60*1000;
     const currentStreak=Number(save.dailyStreak)||0;
-    const nextDay=claimed?Math.max(1,Math.min(7,currentStreak||1)):(save.dailyDate===yesterday?Math.min(7,currentStreak+1):1);
+    const claimElapsed=claimTime?Date.now()-claimTime:Infinity;
+    const streakContinues=!!claimTime && claimElapsed<=48*60*60*1000 && currentStreak>0;
+    const nextDay=claimed?Math.max(1,Math.min(7,currentStreak||1)):(streakContinues?Math.min(7,currentStreak+1):1);
     const rewards=[100,150,200,250,300,400,600];
     const rewardCards=rewards.map((reward,i)=>{
       const day=i+1;
@@ -2043,8 +2575,8 @@ function openModal(name){
       const isToday=!claimed&&day===nextDay;
       return `<div class="option-card" style="text-align:center;padding:10px 5px;min-width:0;${isToday?'border:2px solid var(--gold,#ffd166);box-shadow:0 0 12px #ffd16633;':''}${isClaimed?'opacity:.72;':''}">
         <div style="font-size:12px;font-weight:800;letter-spacing:.3px">📅 DAY ${day}</div>
-        <div aria-hidden="true" style="display:flex;justify-content:center;align-items:center;margin:6px 0;height:38px">${day===7?'<span style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px #8b5cf688)">💎</span>':'<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff0a6 0%,#ffd447 35%,#d99a08 78%,#996300 100%);border:2px solid #ffe98a;box-shadow:0 2px 8px #ffcb3044,inset 0 0 0 2px #b77c00;color:#8a5700;font-size:20px;font-weight:1000;text-shadow:0 1px #fff0a6">¢</span>'}</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:900;white-space:nowrap"><span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:linear-gradient(135deg,#fff0a6,#ffd447 45%,#c98900);border:1px solid #ffe98a;color:#8a5700;font-size:11px;font-weight:1000">¢</span><span>+${reward}</span></div>
+        <div aria-hidden="true" style="display:flex;justify-content:center;align-items:center;margin:6px 0;height:38px">${day===7?'<span style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px #8b5cf688)">💎</span>':'<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff0a6 0%,#ffd447 35%,#d99a08 78%,#996300 100%);border:2px solid #ffe98a;box-shadow:0 2px 8px #ffcb3044,inset 0 0 0 2px #b77c00;color:#8a5700;font-size:20px;font-weight:1000;text-shadow:0 1px #fff0a6">🪙</span>'}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:900;white-space:nowrap"><span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:linear-gradient(135deg,#fff0a6,#ffd447 45%,#c98900);border:1px solid #ffe98a;color:#8a5700;font-size:11px;font-weight:1000">🪙</span><span>+${reward}</span></div>
         <div class="muted" style="font-size:10px;margin-top:3px">${isClaimed?'✅ Claimed':isToday?'🎁 Today':'🪙 Coins'}</div>
       </div>`;
     }).join('');
@@ -2059,9 +2591,12 @@ function openModal(name){
     </div>`);
     $('claimDaily').onclick=()=>{
       if(save.dailyClaimAt && (Date.now()-Number(save.dailyClaimAt))<24*60*60*1000){showToast('⏳ Your next reward is still counting down!');return;}
-      const streak=save.dailyDate===yesterday?Math.min(7,(Number(save.dailyStreak)||0)+1):1;
+      const previousClaim=Number(save.dailyClaimAt)||0;
+      const previousElapsed=previousClaim?Date.now()-previousClaim:Infinity;
+      const streak=previousClaim && previousElapsed<=48*60*60*1000 && Number(save.dailyStreak)>0
+        ?Math.min(7,Number(save.dailyStreak)+1):1;
       const reward=rewards[streak-1];
-      save.dailyDate=today;save.dailyClaimAt=Date.now();save.dailyStreak=streak;save.coins+=reward;
+      save.dailyDate=todayStr();save.dailyClaimAt=Date.now();save.dailyStreak=streak;save.coins+=reward;
       writeSave();updateUI();checkAchievements();openModal('daily');showToast(`🎁 Day ${streak} reward: ${reward} coins!`);
     };
   }else if(name==='themes'){
@@ -2103,7 +2638,7 @@ function openModal(name){
         <button type="button" class="subtle" id="onlineLeave" disabled>Leave</button>
       </div>
       <p class="online-status" id="onlineStatus" role="status"></p>
-      <div class="online-leaderboard-heading"><strong class="small">🌟 Global top scores</strong><span id="onlineLeaderboardCount">0 players</span></div>
+      <div class="online-leaderboard-heading"><strong class="small">🌟 All-time player stats</strong><span id="onlineLeaderboardCount">0 players</span></div>
       <ol class="online-leaderboard" id="onlineLeaderboard" aria-label="Global leaderboard scores" tabindex="0"></ol>
     </section>
     <div class="rank-progress">
@@ -2131,7 +2666,8 @@ function openModal(name){
       save.onlineName=$('onlinePlayerName').value.trim().replace(/\s+/g,' ').slice(0,20);
       writeSave();
     });
-    renderOnlineLeaderboard(onlineLeaderboardRows);
+    renderOnlineLeaderboard(readCachedOnlineLeaderboard());
+    void refreshOnlineLeaderboard();
     updateOnlineControls();
     if(onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){
       sendOnlineMessage({type:'leaderboard'});
@@ -2142,17 +2678,46 @@ function openModal(name){
     }
   }else{closeModal();return}
   $('modalBackdrop').classList.remove('hidden');
+  // Reset scroll positions after the dialog becomes visible, including on mobile browsers.
+  const backdrop=$('modalBackdrop');
+  const modal=backdrop.querySelector('.modal');
+  if(modal) modal.scrollTop=0;
+  content.scrollTop=0; content.scrollTo({top:0,behavior:'auto'});
+  backdrop.scrollTop=0;
+  requestAnimationFrame(()=>{
+    if(!backdrop.classList.contains('hidden')){
+      if(modal) modal.scrollTop=0;
+      content.scrollTop=0;
+      backdrop.scrollTop=0;
+    }
+  });
   if(name==='daily')startDailyCountdown();
 }
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function closeModal(){$('modalBackdrop').classList.add('hidden');stopDailyCountdown();resetArmed=false;if(modalReturnFocus&&modalReturnFocus.isConnected&&modalReturnFocus.focus)modalReturnFocus.focus();modalReturnFocus=null}
  
+const modeDescriptions={classic:'A quick 30-second run. Chain hits, grab golden moles, and dodge bombs.',timeattack:'45 seconds of high-speed action. Score big before the clock hits zero.',endless:'No timer, just three lives. How long can you survive?',challenge:'Score 500 points before the 45-second timer expires.'};
+const validGameModes=Object.keys(modeDescriptions);
+if(!validGameModes.includes(save.gameMode))save.gameMode='classic';
+$('gameModeSelect').value=save.gameMode;
+$('modeDescription').textContent=modeDescriptions[save.gameMode];
+$('gameModeSelect').addEventListener('change',()=>{if(running){$('gameModeSelect').value=currentRoundMode;showToast('Finish the current round before changing modes.');return}const selectedMode=$('gameModeSelect').value;if(!validGameModes.includes(selectedMode)){$('gameModeSelect').value=save.gameMode;return}save.gameMode=selectedMode;currentRoundMode=selectedMode;$('modeDescription').textContent=modeDescriptions[selectedMode];writeSave();updateHUD();});
 $('overlayStart').addEventListener('click',()=>{if(onlineMatch&&onlineMatch.ended){openModal('online');return}if(running&&paused)resumeGame();else if(!running)startGame()});
-$('startBtn').addEventListener('click',()=>{if(running&&paused)resumeGame();else if(!running)startGame()});
+$('startBtn').addEventListener('click',()=>{if(running)abortGame();else if(onlineMatch&&!onlineMatch.ended)forfeitOnlineMatch();else startGame()});
 $('pauseBtn').addEventListener('click',pauseGame);
-$('restartBtn').addEventListener('click',()=>{if(isOnlineRound){showToast('Online matches cannot be restarted.');return}if(running){gameToken++;clearTimers();hideMole();running=false;paused=false}startGame()});
+$('restartBtn').addEventListener('click',()=>{
+  if(onlineMatch&&!onlineMatch.ended){
+    if(typeof window.confirm==='function'&&!window.confirm('Leave this online match? This may count as a forfeit.'))return;
+    forfeitOnlineMatch();
+    openModal('online');
+    return;
+  }
+  if(isOnlineRound){forfeitOnlineMatch();return}
+  if(running){gameToken++;clearTimers();hideMole();running=false;paused=false;isOnlineRound=false}
+  startGame();
+});
 $('slowPower').onclick=()=>usePower('slow');$('freezePower').onclick=()=>usePower('freeze');$('doublePower').onclick=()=>usePower('double');$('heartPower').onclick=()=>usePower('heart');$('surgePower').onclick=()=>usePower('surge');
-$('soundBtn').onclick=()=>{save.muted=!save.muted;writeSave();updateUI();applyMusicState();if(save.music&&!save.muted)startMusic();showToast(save.muted?'All audio muted':'Audio enabled')};
+$('soundBtn').onclick=()=>{save.muted=!save.muted;writeSave();updateUI();applyMusicState();if(save.music&&!save.muted)startMusic();showToast(save.muted?'Extra audio muted':'Audio enabled')};
 $('settingsBtn').onclick=()=>openModal('settings');$('closeModal').onclick=closeModal;
 $('modalBackdrop').addEventListener('click',e=>{if(e.target===$('modalBackdrop'))closeModal()});
 document.addEventListener('keydown',e=>{
@@ -2160,6 +2725,11 @@ document.addEventListener('keydown',e=>{
   if((e.code==='Space'||e.key==='Enter')&&$('modalBackdrop').classList.contains('hidden')&&e.target===document.body){e.preventDefault();if(running&&paused)resumeGame();else if(!running)startGame()}
 });
 document.querySelectorAll('[data-modal]').forEach(btn=>btn.addEventListener('click',()=>openModal(btn.dataset.modal)));
+/* Auto-save progress periodically and flush immediately when leaving or backgrounding the game. */
+/* Lightweight safety autosave: gameplay actions and item-slot changes still save immediately. */
+setInterval(()=>{if(!document.hidden)writeSave()},15000);
+window.addEventListener('beforeunload',writeSave);
+window.addEventListener('blur',()=>{writeSave()});
 /* Auto-pause + flush save when the app goes to the background (home button, app switch, screen off) */
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){
@@ -2167,6 +2737,7 @@ document.addEventListener('visibilitychange',()=>{
     stopDailyCountdown();
     writeSave();
   }else{
+    checkDailyMissionCycle();
     updateDailyCountdown();
     if(!$('modalBackdrop').classList.contains('hidden')&&$('modalTitle').textContent.includes('7-Day Daily Rewards'))startDailyCountdown();
   }
@@ -2249,8 +2820,8 @@ if(save.music)applyMusicState();
 }
 </style>
 
-<style>
-/* Remove decorative eyes while preserving special bomb/golden indicators. */
+<style id="mole-face-restore">
+/* Restore the original face treatment: hide decorative eyes on regular moles. */
 .mole:not(.bomb):not(.golden) .eyes { display:none!important; }
 .mole .snout { z-index:3!important; }
 .mole.bomb .eyes,.mole.golden .eyes { display:block!important; }
@@ -2322,5 +2893,7 @@ if(save.music)applyMusicState();
   }
 }
 </style>
+
 </body>
 </html>
+
